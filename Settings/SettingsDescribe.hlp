@@ -110,4 +110,5 @@
 'seg ul':[150],
 'set fr':[2],
 'set rc':[8, 0],
+'key up':['> increase by 10']
 }
