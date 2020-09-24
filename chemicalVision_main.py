@@ -163,9 +163,12 @@ if len(settings_file_path)==0:
 settingsFile = open(settings_file_path,'r')
 settingString=settingsFile.read()
 settingsFile.close()
-# load settings descriptions here
-
 dictSet=eval(settingString)
+settings_description_file=filePathSettings+osSep+"SettingsDescribe.hlp"
+settingsDesc = open(settings_description_file,'r')
+settingDescString=settingsDesc.read()
+settingsDesc.close()
+descriptSet=eval(settingDescString)
 print('Running, press "q" to quit')
 
 def FindLargestContour(mask):
@@ -485,8 +488,10 @@ def DisplayAllSettings(dictSet,parmWidth,parmHeight,displayFrame,fontScale):
             ip.OpenCVPutText(displayFrame,str(dictSet[setting][setCol]),(parmWidth*(setCol+2),parmHeight*(setRow+1)),setColor, fontScale = fontScale)
     return displayFrame
 
-def DisplaySomeSettings(dictSet,parmWidth,parmHeight,displayFrame,numRowsPad,fontScale):
+def DisplaySomeSettings(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,numRowsPad,fontScale):
     settings=sorted(dictSet)
+    settingsDescriptions=sorted(descriptSet)
+    
     setRow=0
     activeSettingsRow=dictSet['set rc'][0]
     activeSettingsColumn=dictSet['set rc'][1]
@@ -516,7 +521,9 @@ def DisplaySomeSettings(dictSet,parmWidth,parmHeight,displayFrame,numRowsPad,fon
             else:
                 setColor=(255,255,255)
             ip.OpenCVPutText(displayFrame,str(dictSet[setting][setCol]),(parmWidth*(setCol+2),parmHeight*(numRow+1)),setColor, fontScale = fontScale)
-    # put the description for this setting into the display frame
+    settingsDescriptions=dictSet[settings[activeSettingsRow]]
+    ip.OpenCVPutText(displayFrame, setting, (int(parmWidth*0.2),parmHeight*(numRow+1)), setColor, fontScale = fontScale)
+    
     return displayFrame
 
 def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=0):

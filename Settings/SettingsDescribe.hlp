@@ -23,7 +23,7 @@
 '7SG xy':['7 segment region','x','y'],
 'CAM bc':[128, 128, 128],
 'CAM en':[0, 1, 0],
-'CAM ex':['Primary camera exposure','control on(1)/off(0)','value'] 
+'CAM ex':['Primary camera exposure','control on(1)/off(0)','value']
 'CAM fo':[0, 126],
 'CAM wb':[0, 4950],
 'CAM wh':[640, 480],
@@ -48,7 +48,7 @@
 'RO1 ct':[1],
 'RO1 ds':[78, 0, 140],
 'RO1 hs':[42, 0, 100],
-'RO1 ll':['Region of Interest lower limits','hue','saturation','value']
+'RO1 ll':[0, 80, 0],
 'RO1 ul':[255, 255, 255],
 'RO1 wh':[50, 90],
 'RO1 xy':[200, 277],
