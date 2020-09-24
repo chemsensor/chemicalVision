@@ -163,6 +163,8 @@ if len(settings_file_path)==0:
 settingsFile = open(settings_file_path,'r')
 settingString=settingsFile.read()
 settingsFile.close()
+# load settings descriptions here
+
 dictSet=eval(settingString)
 print('Running, press "q" to quit')
 
@@ -514,6 +516,7 @@ def DisplaySomeSettings(dictSet,parmWidth,parmHeight,displayFrame,numRowsPad,fon
             else:
                 setColor=(255,255,255)
             ip.OpenCVPutText(displayFrame,str(dictSet[setting][setCol]),(parmWidth*(setCol+2),parmHeight*(numRow+1)),setColor, fontScale = fontScale)
+    # put the description for this setting into the display frame
     return displayFrame
 
 def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=0):
