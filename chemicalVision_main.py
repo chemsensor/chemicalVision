@@ -1032,7 +1032,8 @@ frameNumber=0
 
 if totalFrames!=1:
     videoFlag=True
-    if liveFlag:
+    #the following seems inverted
+    if liveFlag!=True:
         frameRate=cap.get(cv2.CAP_PROP_FPS)
     else:
         frameRate=20
@@ -1262,7 +1263,7 @@ if (saveSettings=="Y") | (saveSettings=="y"):
     settingsFile.close()
 
 if (videoFlag==False) and (frameNumber>0):
-    saveSettings = input("Save frame values (Y/n)?")
+    saveSettings = input("Save single frame values (Y/n)?")
     if (saveSettings=="Y") | (saveSettings=="y"):
         root = tk.Tk()
         root.withdraw()
@@ -1278,3 +1279,12 @@ if grabCount!=0:
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_grabbedData' ,defaultextension='.xlsx')
         #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
         WriteMultiFrameDataToExcel(grabbedStats[:,:,0:grabCount,:],0,data_file_path)
+
+if frameNumber>0:
+    saveSettings = input("Save all frame values (Y/n)?")
+    if (saveSettings=="Y") | (saveSettings=="y"):
+        root = tk.Tk()
+        root.withdraw()
+        data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
+        #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
+        WriteMultiFrameDataToExcel(parameterStats[:,:,0:frameNumber,:],0,data_file_path)
