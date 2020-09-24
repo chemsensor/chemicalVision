@@ -521,9 +521,10 @@ def DisplaySomeSettings(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,nu
             else:
                 setColor=(255,255,255)
             ip.OpenCVPutText(displayFrame,str(dictSet[setting][setCol]),(parmWidth*(setCol+2),parmHeight*(numRow+1)),setColor, fontScale = fontScale)
-    settingsDescriptions=dictSet[settings[activeSettingsRow]]
-    ip.OpenCVPutText(displayFrame, setting, (int(parmWidth*0.2),parmHeight*(numRow+1)), setColor, fontScale = fontScale)
-    
+    settingNameDescription=str(descriptSet[settings[activeSettingsRow]][0])
+    settingValueDescription=str(descriptSet[settings[activeSettingsRow]][activeSettingsColumn+1])
+    ip.OpenCVPutText(displayFrame, settingNameDescription, (2,displayFrame.shape[1]-75), (0,255,0), fontScale = fontScale)   
+    ip.OpenCVPutText(displayFrame, settingValueDescription, (2,displayFrame.shape[1]-55), (0,255,0), fontScale = fontScale)   
     return displayFrame
 
 def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=0):
@@ -1174,7 +1175,7 @@ while frameNumber<=totalFrames:
         
     if dictSet['flg ds'][0]==1:
         settingsFrame = np.zeros((300, 300, 3), np.uint8)
-        settingsFrame=DisplaySomeSettings(dictSet,60,24,settingsFrame,5,0.6)
+        settingsFrame=DisplaySomeSettings(dictSet,descriptSet,60,24,settingsFrame,4,0.6)
         #cv2.imshow('Settings', settingsFrame)
         if dictSet['SET ds'][2]!=0:
             displayFrame=OpenCVComposite(settingsFrame, displayFrame,dictSet['SET ds'])
