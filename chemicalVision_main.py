@@ -977,9 +977,11 @@ if len(video_file_path)!=0:
     totalFrames=int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     liveFlag=False
     outFileName=video_file_path+'Processed.mp4'
+    outFileNameRaw=video_file_path+'UnProcessed.mp4'
 else:
     liveFlag=True
     outFileName=os.getcwd()+'\\Processed.avi'
+    outFileNameRaw=os.getcwd()+'\\UnProcessed.avi'
     #outFileName=os.getcwd()+'\\'+time.ctime()+'_Processed.avi'
     if versionOS=='W':
         cap = cv2.VideoCapture(int(dictSet['CAM en'][0])+cv2.CAP_DSHOW)
@@ -1043,6 +1045,10 @@ else:
     ret, originalFrame = cap.read() 
 
 outp = cv2.VideoWriter(outFileName,fourcc, frameRate, (dictSet['dsp wh'][0], dictSet['dsp wh'][1]))
+if (dictSet['FRM or'][0]==1) or dictSet['FRM or'][0]==3:
+    outup = cv2.VideoWriter(outFileNameRaw,fourcc, frameRate, (dictSet['CAM wh'][1], dictSet['CAM wh'][0]))
+else:
+    outup = cv2.VideoWriter(outFileNameRaw,fourcc, frameRate, (dictSet['CAM wh'][0], dictSet['CAM wh'][1]))
     
 while frameNumber<=totalFrames:
     if videoFlag:
@@ -1179,6 +1185,7 @@ while frameNumber<=totalFrames:
 
     if (dictSet['flg rn'][0]==1) & (dictSet['flg rc'][0]==1):
         outp.write(displayFrame)
+        outup.write(frame)
 
     keypress,dictSet,continueFlag,changeCameraFlag,frameJump=CheckKeys(dictSet)
     
@@ -1240,6 +1247,7 @@ while frameNumber<=totalFrames:
             
 cap.release()
 outp.release()
+outup.release()
 if (dictSet['CM2 en'][0]!=-1) and (liveFlag):
     cap2.release()
 if (dictSet['CM3 en'][0]!=-1) and (liveFlag):
