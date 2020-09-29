@@ -966,7 +966,7 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
         #print('digit '+str(digit)+' is '+str(bin(decode))+' value '+str(value))
         total=total+10**(2-digit)*value
     total=round(total,2)
-    ip.OpenCVPutText(decodeFrame,str(total),(2,decodeFrame.shape[0]-16),(255,255,255),fontScale = 0.6)
+    ip.OpenCVPutText(decodeFrame,'{0:.2f}'.format(total),(2,decodeFrame.shape[0]-16),(255,255,255),fontScale = 0.6)
     return total,decodeFrame
 
 
