@@ -877,10 +877,10 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
     imageStart=dictSet['7DG sn'][0]
     digits=np.zeros((digitHeight, digitWidth, 5), np.uint8)
     total=0
-    for digit in range(dictSet['7DG sn'][1]): 
-        digits[:,:,digit]=rotImage[dictSet['7DG mr'][0]:dictSet['7DG mr'][0]+digitHeight,imageStart+(digit*digitWidth):imageStart+((digit+1)*digitWidth)]    
+    for digit in range(dictSet['7DG sn'][2]): 
+        digits[:,:,digit]=rotImage[dictSet['7DG mr'][0]:dictSet['7DG mr'][0]+digitHeight,imageStart+(digit*digitWidth)+(digit*dictSet['7DG sn'][1]):imageStart+(digit*dictSet['7DG sn'][1])+((digit+1)*digitWidth)]    
         #cv2.imshow(str(digit),digits[:,:,digit])
-        cv2.rectangle(rotImageDisplay,(imageStart+(digit*digitWidth),dictSet['7DG mr'][0]),(imageStart+((digit+1)*digitWidth),dictSet['7DG mr'][0]+digitHeight),(0,0,255),4 )
+        cv2.rectangle(rotImageDisplay,(imageStart+(digit*digitWidth)+(digit*dictSet['7DG sn'][1]),dictSet['7DG mr'][0]),(imageStart+((digit+1)*digitWidth)+(digit*dictSet['7DG sn'][1]),dictSet['7DG mr'][0]+digitHeight),(0,0,255),4 )
         decodeFrame=OpenCVComposite(rotImageDisplay, decodeFrame, dictSet['7RT ds'])
         digitImage=digits[:,:,digit]
         digitMask = cv2.inRange(digitImage, np.array([dictSet['7D1 ll']]), np.array(dictSet['7D1 ul']))
@@ -917,7 +917,7 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
             if trOn>0.4:
                 decode=decode+4
             #cv2.imshow("top right",trSegment)
-            ccSegment=digitMask[int(dH/2)-int(dH*0.15):int(dH/2)+int(dH*0.15),int(dW*0.25):dW-int(dW*0.25)]
+            ccSegment=digitMask[int(dH/2)-int(dH*0.10):int(dH/2)+int(dH*0.10),int(dW*0.25):dW-int(dW*0.25)]
             ccOn = cv2.countNonZero(ccSegment)/ccSegment.size
             if ccOn>0.4:
                 decode=decode+8
@@ -966,7 +966,11 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
         #print('digit '+str(digit)+' is '+str(bin(decode))+' value '+str(value))
         total=total+10**(2-digit)*value
     total=round(total,2)
+<<<<<<< Updated upstream
     ip.OpenCVPutText(decodeFrame,'{0:.2f}'.format(total),(2,decodeFrame.shape[0]-16),(255,255,255),fontScale = 0.6)
+=======
+    ip.OpenCVPutText(decodeFrame,'{0:.2f}'.format(total),(2,decodeFrame.shape[0]-16),(255,255,255),fontScale = 1.2)
+>>>>>>> Stashed changes
     return total,decodeFrame
 
 
@@ -1016,11 +1020,12 @@ else:
             ret=cap.set(cv2.CAP_PROP_WB_TEMPERATURE,dictSet['CAM wb'][1])
     totalFrames=10000
 
-parameterStats=np.zeros((32,6,totalFrames,60))
+totalIndex=int(totalFrames/dictSet['set fr'][0])
+parameterStats=np.zeros((32,6,totalIndex,60))
 if totalFrames==1:
     grabbedStats=np.zeros((32,6,100,60))
 else:
-    grabbedStats=np.zeros((32,6,totalFrames,60))
+    grabbedStats=np.zeros((32,6,totalIndex,60))
 grabCount=0
     
 #ParameterStats Map
@@ -1031,6 +1036,7 @@ grabCount=0
 #3rd dimension frame number
 #4th dimension 0 to 4: labels=["WBR","RO1","RO2","RO3"]
 frameNumber=0
+frameIndex=0
 
 if totalFrames!=1:
     videoFlag=True
@@ -1105,7 +1111,7 @@ while frameNumber<=totalFrames:
     # else:
     #     mass=-1
     
-    if (dictSet['7SG ds'][2]!=0) and (liveFlag):
+    if (dictSet['7SG ds'][2]!=0):
         frame7SG=frame[dictSet['7SG xy'][1]:dictSet['7SG xy'][1]+dictSet['7SG wh'][1],dictSet['7SG xy'][0]:dictSet['7SG xy'][0]+dictSet['7SG wh'][0],:]
         displayFrame=OpenCVComposite(frame7SG, displayFrame,dictSet['7SG ds'])
         decodeFrame = np.zeros((300, 200, 3), np.uint8)
@@ -1134,17 +1140,17 @@ while frameNumber<=totalFrames:
                 
     if dictSet['flg pf'][0]!=0:
         frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList)
-        parameterStats[0:16,:,frameNumber,0:frameStats.shape[2]]=frameStats
-        parameterStats[16,0,frameNumber,:]=mass
+        parameterStats[0:16,:,frameIndex,0:frameStats.shape[2]]=frameStats
+        parameterStats[16,0,frameIndex,:]=mass
         if liveFlag:
-            parameterStats[28,0,frameNumber,:]=time.time()
+            parameterStats[28,0,frameIndex,:]=time.time()
         elif videoFlag:
-            parameterStats[28,0,frameNumber,:]=frameNumber/frameRate
+            parameterStats[28,0,frameIndex,:]=frameNumber/frameRate
         else:
-            parameterStats[28,0,frameNumber,:]=0
-        parameterStats[29,0,frameNumber,:]=frameRate
-        parameterStats[30,0,frameNumber,:]=frameNumber
-        parameterStats[31,0,frameNumber,:]=1
+            parameterStats[28,0,frameIndex,:]=0
+        parameterStats[29,0,frameIndex,:]=frameRate
+        parameterStats[30,0,frameIndex,:]=frameNumber
+        parameterStats[31,0,frameIndex,:]=1
 
     if dictSet['flg tp'][0]!=0:
         displayFrame=MakeTimePlots(parameterStats,dictSet,displayFrame)
@@ -1202,7 +1208,7 @@ while frameNumber<=totalFrames:
             cv2.imwrite(filePathImageProcessed+osSep+'grabbed_displayFrame'+str(grabCount).zfill(3)+'.jpg', displayFrame)
         else:
             cv2.imwrite(video_file_dir+osSep+video_file_filename+'_displayFrame'+str(grabCount).zfill(3)+'.jpg', displayFrame)
-        grabbedStats[:,:,grabCount,:]=parameterStats[:,:,frameNumber,:]
+        grabbedStats[:,:,grabCount,:]=parameterStats[:,:,frameIndex,:]
         grabCount=grabCount+1
         
     if continueFlag==False:
@@ -1232,18 +1238,26 @@ while frameNumber<=totalFrames:
     if (frameJump!=0) & (liveFlag==False):
         if np.abs(frameJump)==1:
             frameNumber=frameNumber+frameJump
+            frameIndex=frameIndex+frameJump
         else:
             frameNumber=frameNumber+int(totalFrames*(frameJump/100))
+            frameIndex=frameIndex+1
         if frameNumber>totalFrames:
             frameNumber=totalFrames+1
         if frameNumber<0:
             frameNumber=0
+        if frameIndex>totalIndex:
+            frameIndex=totalIndex
+        if frameIndex<0:
+            frameIndex=0
     elif liveFlag==False and videoFlag:
         if dictSet['flg rn'][0]==1:
             frameNumber=frameNumber+dictSet['set fr'][0]
+            frameIndex=frameIndex+1
     elif liveFlag==True:
         if (dictSet['flg rn'][0]==1):
             frameNumber=frameNumber+1
+            frameIndex=frameIndex+1
             
 cap.release()
 outp.release()
@@ -1270,13 +1284,13 @@ if (saveSettings=="Y") | (saveSettings=="y"):
     settingsFile.write(outString)
     settingsFile.close()
 
-if (videoFlag==False) and (frameNumber>0):
+if (videoFlag==False) and (frameIndex>0):
     saveSettings = input("Save single frame values (Y/n)?")
     if (saveSettings=="Y") | (saveSettings=="y"):
         root = tk.Tk()
         root.withdraw()
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'frameData',defaultextension='.xlsx')
-        WriteSingleFrameDataToExcel(parameterStats[:,:,frameNumber,:],roiList,data_file_path)
+        WriteSingleFrameDataToExcel(parameterStats[:,:,frameIndex,:],roiList,data_file_path)
         #WriteMultiFrameDataToExcel(grabbedStats[:,:,0:grabCount,:],0,data_file_path)
         
 if grabCount!=0:
@@ -1288,11 +1302,11 @@ if grabCount!=0:
         #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
         WriteMultiFrameDataToExcel(grabbedStats[:,:,0:grabCount,:],0,data_file_path)
 
-if frameNumber>0:
+if frameIndex>0:
     saveSettings = input("Save all frame values (Y/n)?")
     if (saveSettings=="Y") | (saveSettings=="y"):
         root = tk.Tk()
         root.withdraw()
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
         #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
-        WriteMultiFrameDataToExcel(parameterStats[:,:,0:frameNumber,:],0,data_file_path)
+        WriteMultiFrameDataToExcel(parameterStats[:,:,0:frameIndex,:],0,data_file_path)
