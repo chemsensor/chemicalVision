@@ -966,11 +966,7 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
         #print('digit '+str(digit)+' is '+str(bin(decode))+' value '+str(value))
         total=total+10**(2-digit)*value
     total=round(total,2)
-<<<<<<< Updated upstream
-    ip.OpenCVPutText(decodeFrame,'{0:.2f}'.format(total),(2,decodeFrame.shape[0]-16),(255,255,255),fontScale = 0.6)
-=======
     ip.OpenCVPutText(decodeFrame,'{0:.2f}'.format(total),(2,decodeFrame.shape[0]-16),(255,255,255),fontScale = 1.2)
->>>>>>> Stashed changes
     return total,decodeFrame
 
 
@@ -1055,7 +1051,11 @@ if (dictSet['FRM or'][0]==1) or dictSet['FRM or'][0]==3:
     outup = cv2.VideoWriter(outFileNameRaw,fourcc, frameRate, (dictSet['CAM wh'][1], dictSet['CAM wh'][0]))
 else:
     outup = cv2.VideoWriter(outFileNameRaw,fourcc, frameRate, (dictSet['CAM wh'][0], dictSet['CAM wh'][1]))
-    
+
+count=dictSet['CNT st'][0]
+counterUnder=dictSet['CNT st'][1]
+counterOver=dictSet['CNT st'][2]
+
 while frameNumber<=totalFrames:
     if videoFlag:
         if liveFlag!=True:
@@ -1151,6 +1151,26 @@ while frameNumber<=totalFrames:
         parameterStats[29,0,frameIndex,:]=frameRate
         parameterStats[30,0,frameIndex,:]=frameNumber
         parameterStats[31,0,frameIndex,:]=1
+    
+    if dictSet['flg ct'][0]!=0:
+        countSignal=parameterStats[dictSet['CNT c1'][0],0,frameIndex,dictSet['CNT c1'][1]]*dictSet['CNT c1'][2]+parameterStats[dictSet['CNT c2'][0],0,frameIndex,dictSet['CNT c2'][1]]*dictSet['CNT c2'][2]
+        if dictSet['CNT hy'][2]:
+            if(countSignal>=dictSet['CNT hy'][1]):
+                counterOver=True
+                if counterUnder==True:
+                    count=count+1
+                    counterUnder=False
+            if countSignal<=dictSet['CNT hy'][0]:
+                counterUnder=True
+        else:
+            if(countSignal>=dictSet['CNT hy'][1]):
+                counterOver=True
+            if countSignal<=dictSet['CNT hy'][0]:
+                counterUnder=True
+                if counterOver==True:
+                    count=count+1
+                    counterOver=False
+        parameterStats[17,0,frameIndex,:]=count
 
     if dictSet['flg tp'][0]!=0:
         displayFrame=MakeTimePlots(parameterStats,dictSet,displayFrame)
@@ -1310,3 +1330,11 @@ if frameIndex>0:
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
         #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
         WriteMultiFrameDataToExcel(parameterStats[:,:,0:frameIndex,:],0,data_file_path)
+
+dropSignal=parameterStats[dictSet['CNT yc'][0],dictSet['CNT yc'][1],0:frameIndex,dictSet['CNT yc'][2]]
+boolDrop=da.hyst(dropSignal, dictSet['CNT hy'][0], dictSet['CNT hy'][1])
+times,frames=da.crossBoolean(parameterStats[dictSet['CNT xc'][0],dictSet['CNT xc'][1],0:frameIndex,dictSet['CNT xc'][2]], boolDrop, crossPoint=0.5, direction='rising')
+counts=np.zeros((len(dropSignal)))
+for index in frames:
+    counts[index:]=counts[index:]+1
+parameterStats[17,0,frameIndex,:]=mass        
