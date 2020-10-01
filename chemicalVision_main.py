@@ -164,7 +164,7 @@ settingsFile = open(settings_file_path,'r')
 settingString=settingsFile.read()
 settingsFile.close()
 dictSet=eval(settingString)
-settings_description_file=filePathSettings+osSep+"SettingsDescribe.hlp"
+settings_description_file=filePathSettings+osSep+"SettingsDescribe.txt"
 settingsDesc = open(settings_description_file,'r')
 settingDescString=settingsDesc.read()
 settingsDesc.close()
