@@ -35,6 +35,10 @@
 'CM3 en':[-1],
 'CM3 wh':[217, 232],
 'CM3 xy':[168, 88],
+'CNT c1':['counter channel 1', 'color channel','ROI number','multiplier'],
+'CNT c2':['counter channel 2', 'color channel','ROI number','multiplier'],
+'CNT hy':['counter hystersis', 'low threshold','high threshold','crossing type']
+'CNT st':['counter initialize', 'start count','low flag','high flag'],
 'FMK ds':[22, 0, 0],
 'FRM or':[3],
 'MDG ds':[10, 50, 0],
@@ -110,5 +114,11 @@
 'seg ul':[150],
 'set fr':[2],
 'set rc':[8, 0],
-'key up':['> increase by 10']
+'tx1 cl':['text color', 'blue','green','red'],
+'tx1 ds':['text display','%x','%y','%size']
+'tx1 fm':['text #format','type', '#decimals'],
+'tx1 fn':['text font','y-pad','x-pad','scale']
+'tx1 vc':['text value','channel', 'summary stat', 'ROI Number'],
+'tx1 wh':['text box','width','height'],
+'key up':['> increase by 10'],
 }
