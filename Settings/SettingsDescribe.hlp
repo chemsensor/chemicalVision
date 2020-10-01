@@ -115,9 +115,9 @@
 'set fr':[2],
 'set rc':[8, 0],
 'tx1 cl':['text color', 'blue','green','red'],
-'tx1 ds':['text display','%x','%y','%size']
+'tx1 ds':['text display','%x','%y','%size'],
 'tx1 fm':['text #format','type', '#decimals'],
-'tx1 fn':['text font','y-pad','x-pad','scale']
+'tx1 fn':['text font','y-pad','x-pad','scale'],
 'tx1 vc':['text value','channel', 'summary stat', 'ROI Number'],
 'tx1 wh':['text box','width','height'],
 'key up':['> increase by 10'],
