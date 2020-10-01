@@ -560,7 +560,7 @@ def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=
         singleHeight=int((histogramHeight-10)/len(inputImages))
         histogramFrame = np.zeros((histogramHeight, 255+20, 3), np.uint8)
         for row, displayColor, inputImage, channel, label in zip(rows, displayColors, inputImages, channels,labels):              
-            mean,std,most=ip.OpenCVDisplayedHistogram(inputImage,channel,resMask,256,0,255,5,row*singleHeight+5,256,singleHeight-15,histogramFrame,displayColor,5,True,label)
+            mean,std,most=ip.OpenCVDisplayedHistogram(inputImage,channel,resMask,256,0,255,5,row*singleHeight+5,256,singleHeight-15,histogramFrame,displayColor,5,True,label,fontScale=0.38)
         return(allROIsummary[0,:,0],allROIsummary[1,:,0],resMask,resFrameROI,contourArea,boundingRectangle,histogramFrame)
     else:
         return(allROIsummary[0,:,0],allROIsummary[1,:,0],resMask,resFrameROI,contourArea,boundingRectangle,False)
@@ -741,6 +741,27 @@ def MakeTimePlots(parameterStats,dictSet,displayFrame,frameStart=0,frameEnd=0):
                 displayFrame=OpenCVComposite(scatterFrame, displayFrame, dictSet[axis+' ds'])
     return displayFrame
 
+def DisplayText(parameterStats,dictSet,displayFrame,frameIndex):
+    txtList=[]
+    for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
+        if (setting[0:2]=="tx") & (setting[4:6]=="ds"):
+            txtList.append(setting[0:3])
+    for text in txtList:
+        if dictSet[text+' ds'][2]!=0:
+            value=parameterStats[dictSet[text+' vc'][0],dictSet[text+' vc'][1],frameIndex,dictSet[text+' vc'][2]]
+            if dictSet[text+' fm'][0]==1:
+                formatString='{0:.'+str(dictSet[text+' fm'][1])+'f}'
+                textString=formatString.format(value)
+            else:
+                textString=str(value)
+            textFrame = np.zeros((dictSet[text+' wh'][1], dictSet[text+' wh'][0], 3), np.uint8)
+            bLCoord=(dictSet[text+' fn'][0],dictSet[text+' wh'][1]-dictSet[text+' fn'][1])
+            color=(dictSet[text+' cl'][0],dictSet[text+' cl'][1],dictSet[text+' cl'][2])
+            fontScale=dictSet[text+' fn'][2]/100
+            ip.OpenCVPutText(textFrame, textString, bLCoord, color, fontScale =fontScale)
+            displayFrame=OpenCVComposite(textFrame, displayFrame, dictSet[text+' ds'])
+    return displayFrame
+
 def MakeFramePlots(dictSet,displayFrame,rgbROI,blankData=np.array([]),calFlag=False):
     pltList=[]
     for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
@@ -800,16 +821,16 @@ def WriteMultiFrameDataToExcel(parameterStats,roiNumber,outExcelFileName):
     dfCollected=(parameterStats[31,0,:,0]==1)
     dfMean=pd.DataFrame(data=parameterStats[0:12,0,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
     dfStdev=pd.DataFrame(data=parameterStats[0:12,1,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
-    dfMost=pd.DataFrame(data=parameterStats[0:12,2,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
+    #dfMost=pd.DataFrame(data=parameterStats[0:12,2,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
     writer = pd.ExcelWriter(outExcelFileName, engine='xlsxwriter')
     #workbook  = writer.book
     dfMean.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=9,index=False)
     dfStdev.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=22,index=False)
-    dfMost.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=35,index=False)
+    #dfMost.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=35,index=False)
     worksheetData = writer.sheets['FrameData']
     worksheetData.write('J1', 'Means')
     worksheetData.write('W1', 'Standard Deviations')
-    worksheetData.write('AJ1', 'Most Frequent Values')
+    #worksheetData.write('AJ1', 'Most Frequent Values')
     worksheetData.write('A2', 'FrameNumber')
     worksheetData.write('B2', 'FrameRate')
     worksheetData.write('C2', 'Time')
@@ -818,6 +839,7 @@ def WriteMultiFrameDataToExcel(parameterStats,roiNumber,outExcelFileName):
     worksheetData.write('F2', 'Width')
     worksheetData.write('G2', 'ContourArea')
     worksheetData.write('H2', 'Mass')
+    worksheetData.write('I2', 'Count')
     worksheetData.write_column('A3', parameterStats[30,0,dfCollected,roiNumber])
     worksheetData.write_column('B3', parameterStats[29,0,dfCollected,roiNumber])
     worksheetData.write_column('C3', parameterStats[28,0,dfCollected,roiNumber])
@@ -826,6 +848,7 @@ def WriteMultiFrameDataToExcel(parameterStats,roiNumber,outExcelFileName):
     worksheetData.write_column('F3', parameterStats[14,0,dfCollected,roiNumber])
     worksheetData.write_column('G3', parameterStats[15,0,dfCollected,roiNumber])
     worksheetData.write_column('H3', parameterStats[16,0,dfCollected,roiNumber])
+    worksheetData.write_column('I3', parameterStats[17,0,dfCollected,roiNumber])
     #workbook.close()
     writer.save()
 
@@ -1017,7 +1040,7 @@ else:
     totalFrames=10000
 
 totalIndex=int(totalFrames/dictSet['set fr'][0])
-parameterStats=np.zeros((32,6,totalIndex,60))
+parameterStats=np.zeros((32,6,totalIndex+dictSet['set fr'][0],60))
 if totalFrames==1:
     grabbedStats=np.zeros((32,6,100,60))
 else:
@@ -1171,9 +1194,13 @@ while frameNumber<=totalFrames:
                     count=count+1
                     counterOver=False
         parameterStats[17,0,frameIndex,:]=count
+        parameterStats[18,0,frameIndex,:]=countSignal
 
     if dictSet['flg tp'][0]!=0:
         displayFrame=MakeTimePlots(parameterStats,dictSet,displayFrame)
+    
+    if dictSet['flg td'][0]!=0:
+        displayFrame=DisplayText(parameterStats,dictSet,displayFrame,frameIndex)
 
     if dictSet['flg fp'][0]!=0:
         roiSetName='RO1'
@@ -1331,10 +1358,10 @@ if frameIndex>0:
         #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
         WriteMultiFrameDataToExcel(parameterStats[:,:,0:frameIndex,:],0,data_file_path)
 
-dropSignal=parameterStats[dictSet['CNT yc'][0],dictSet['CNT yc'][1],0:frameIndex,dictSet['CNT yc'][2]]
-boolDrop=da.hyst(dropSignal, dictSet['CNT hy'][0], dictSet['CNT hy'][1])
-times,frames=da.crossBoolean(parameterStats[dictSet['CNT xc'][0],dictSet['CNT xc'][1],0:frameIndex,dictSet['CNT xc'][2]], boolDrop, crossPoint=0.5, direction='rising')
-counts=np.zeros((len(dropSignal)))
-for index in frames:
-    counts[index:]=counts[index:]+1
-parameterStats[17,0,frameIndex,:]=mass        
+# dropSignal=parameterStats[dictSet['CNT yc'][0],dictSet['CNT yc'][1],0:frameIndex,dictSet['CNT yc'][2]]
+# boolDrop=da.hyst(dropSignal, dictSet['CNT hy'][0], dictSet['CNT hy'][1])
+# times,frames=da.crossBoolean(parameterStats[dictSet['CNT xc'][0],dictSet['CNT xc'][1],0:frameIndex,dictSet['CNT xc'][2]], boolDrop, crossPoint=0.5, direction='rising')
+# counts=np.zeros((len(dropSignal)))
+# for index in frames:
+#     counts[index:]=counts[index:]+1
+# parameterStats[17,0,frameIndex,:]=mass        

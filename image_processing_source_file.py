@@ -28,7 +28,7 @@ def OpenCVRebalanceImage(frame,rfactor,gfactor,bfactor):
 def MidPoint(pt1,pt2):
     return ((pt1[0]+pt2[0])/2.0, (pt1[1]+pt2[1])/2.0)
 
-def OpenCVDisplayedHistogram(image,channel,mask,NumBins,DataMin,DataMax,x,y,w,h,DisplayImage,color,integrationWindow,labelFlag,labelText=""):
+def OpenCVDisplayedHistogram(image,channel,mask,NumBins,DataMin,DataMax,x,y,w,h,DisplayImage,color,integrationWindow,labelFlag,labelText="",fontScale = 0.4):
     x=np.round(x,decimals=0).astype(int)
     y=np.round(y,decimals=0).astype(int)
     w=np.round(w,decimals=0).astype(int)
@@ -55,7 +55,7 @@ def OpenCVDisplayedHistogram(image,channel,mask,NumBins,DataMin,DataMax,x,y,w,h,
         freq = int(histdata[i])
         cv2.rectangle(DisplayImage, ((i*binWidth)+x, y+h), (((i+1)*binWidth)+x, y+h-freq), color)
     if labelFlag:
-        cv2.putText(DisplayImage,labelText+" m="+'{0:.2f}'.format(domValue/float(NumBins-1)*(DataMax-DataMin))+" n="+'{:4d}'.format(int(pixelCount))+" a="+'{0:.2f}'.format(avgVal[0][channel][0])+" s="+'{0:.2f}'.format(avgVal[1][channel][0]),(x,y+h+12), font, 0.4,color,1,cv2.LINE_AA)
+        cv2.putText(DisplayImage,labelText+" m="+'{0:.2f}'.format(domValue/float(NumBins-1)*(DataMax-DataMin))+" n="+'{:4d}'.format(int(pixelCount))+" a="+'{0:.2f}'.format(avgVal[0][channel][0])+" s="+'{0:.2f}'.format(avgVal[1][channel][0]),(x,y+h+12), font, fontScale,color,1,cv2.LINE_AA)
     return (avgVal[0][channel][0],avgVal[1][channel][0],domValue/float(NumBins-1)*(DataMax-DataMin))
         
 def OpenCVDisplayedScatter(img, xdata,ydata,x,y,w,h,color, circleThickness,ydataRangemin=None, ydataRangemax=None,xdataRangemin=None, xdataRangemax=None, lMargin=11, rMargin=4, tMargin=2,bMargin=4,alpha=1,labelFlag=True):      
