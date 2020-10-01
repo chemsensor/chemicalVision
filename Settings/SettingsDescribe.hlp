@@ -37,7 +37,7 @@
 'CM3 xy':[168, 88],
 'CNT c1':['counter channel 1', 'color channel','ROI number','multiplier'],
 'CNT c2':['counter channel 2', 'color channel','ROI number','multiplier'],
-'CNT hy':['counter hystersis', 'low threshold','high threshold','crossing type']
+'CNT hy':['counter hystersis', 'low threshold','high threshold','crossing type'],
 'CNT st':['counter initialize', 'start count','low flag','high flag'],
 'FMK ds':[22, 0, 0],
 'FRM or':[3],
