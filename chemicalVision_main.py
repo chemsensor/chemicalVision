@@ -13,6 +13,7 @@ import time
 import numpy as np
 import pandas as pd
 #requires: pip install opencv-python
+import xlsxwriter
 import cv2
 import smtplib
 import imaplib
@@ -816,39 +817,43 @@ def MakeFramePlots(dictSet,displayFrame,rgbROI,blankData=np.array([]),calFlag=Fa
                 displayFrame=OpenCVComposite(scatterFrame, displayFrame, dictSet[axis+' ds'])
     return displayFrame,np.sum(vSum[xFilter],axis=1)
 
-def WriteMultiFrameDataToExcel(parameterStats,roiNumber,outExcelFileName):
-    #dfCollected=(parameterStats[31,0,:,0]==1) & (parameterStats[12,0,:,0]!=0)
-    dfCollected=(parameterStats[31,0,:,0]==1)
-    dfMean=pd.DataFrame(data=parameterStats[0:12,0,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
-    dfStdev=pd.DataFrame(data=parameterStats[0:12,1,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
-    #dfMost=pd.DataFrame(data=parameterStats[0:12,2,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
+def WriteMultiFrameDataToExcel(parameterStats,roiList,outExcelFileName):
+    #workbook = xlsxwriter.Workbook(outExcelFileName)
     writer = pd.ExcelWriter(outExcelFileName, engine='xlsxwriter')
     #workbook  = writer.book
-    dfMean.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=9,index=False)
-    dfStdev.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=22,index=False)
-    #dfMost.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=35,index=False)
-    worksheetData = writer.sheets['FrameData']
-    worksheetData.write('J1', 'Means')
-    worksheetData.write('W1', 'Standard Deviations')
-    #worksheetData.write('AJ1', 'Most Frequent Values')
-    worksheetData.write('A2', 'FrameNumber')
-    worksheetData.write('B2', 'FrameRate')
-    worksheetData.write('C2', 'Time')
-    worksheetData.write('D2', 'Area')
-    worksheetData.write('E2', 'Height')
-    worksheetData.write('F2', 'Width')
-    worksheetData.write('G2', 'ContourArea')
-    worksheetData.write('H2', 'Mass')
-    worksheetData.write('I2', 'Count')
-    worksheetData.write_column('A3', parameterStats[30,0,dfCollected,roiNumber])
-    worksheetData.write_column('B3', parameterStats[29,0,dfCollected,roiNumber])
-    worksheetData.write_column('C3', parameterStats[28,0,dfCollected,roiNumber])
-    worksheetData.write_column('D3', parameterStats[12,0,dfCollected,roiNumber])
-    worksheetData.write_column('E3', parameterStats[13,0,dfCollected,roiNumber])
-    worksheetData.write_column('F3', parameterStats[14,0,dfCollected,roiNumber])
-    worksheetData.write_column('G3', parameterStats[15,0,dfCollected,roiNumber])
-    worksheetData.write_column('H3', parameterStats[16,0,dfCollected,roiNumber])
-    worksheetData.write_column('I3', parameterStats[17,0,dfCollected,roiNumber])
+    for roiSetName,roiNumber in zip(roiList,range(len(roiList))):
+        #dfCollected=(parameterStats[31,0,:,0]==1) & (parameterStats[12,0,:,0]!=0)
+        dfCollected=(parameterStats[31,0,:,0]==1)
+        dfMean=pd.DataFrame(data=parameterStats[0:12,0,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
+        dfStdev=pd.DataFrame(data=parameterStats[0:12,1,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
+        #dfMost=pd.DataFrame(data=parameterStats[0:12,2,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
+        #workbook  = writer.book
+        #worksheetData = workbook.add_worksheet(roiSetName)
+        dfMean.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=9,index=False)
+        dfStdev.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=22,index=False)
+        #dfMost.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=35,index=False)
+        worksheetData = writer.sheets[roiSetName]
+        worksheetData.write('J1', 'Means')
+        worksheetData.write('W1', 'Standard Deviations')
+        #worksheetData.write('AJ1', 'Most Frequent Values')
+        worksheetData.write('A2', 'FrameNumber')
+        worksheetData.write('B2', 'FrameRate')
+        worksheetData.write('C2', 'Time')
+        worksheetData.write('D2', 'Area')
+        worksheetData.write('E2', 'Height')
+        worksheetData.write('F2', 'Width')
+        worksheetData.write('G2', 'ContourArea')
+        worksheetData.write('H2', 'Mass')
+        worksheetData.write('I2', 'Count')
+        worksheetData.write_column('A3', parameterStats[30,0,dfCollected,roiNumber])
+        worksheetData.write_column('B3', parameterStats[29,0,dfCollected,roiNumber])
+        worksheetData.write_column('C3', parameterStats[28,0,dfCollected,roiNumber])
+        worksheetData.write_column('D3', parameterStats[12,0,dfCollected,roiNumber])
+        worksheetData.write_column('E3', parameterStats[13,0,dfCollected,roiNumber])
+        worksheetData.write_column('F3', parameterStats[14,0,dfCollected,roiNumber])
+        worksheetData.write_column('G3', parameterStats[15,0,dfCollected,roiNumber])
+        worksheetData.write_column('H3', parameterStats[16,0,dfCollected,roiNumber])
+        worksheetData.write_column('I3', parameterStats[17,0,dfCollected,roiNumber])
     #workbook.close()
     writer.save()
 
@@ -1040,11 +1045,11 @@ else:
     totalFrames=10000
 
 totalIndex=int(totalFrames/dictSet['set fr'][0])
-parameterStats=np.zeros((32,6,totalIndex+dictSet['set fr'][0],60))
+parameterStats=np.zeros((32,6,totalIndex+dictSet['set fr'][0],10))
 if totalFrames==1:
-    grabbedStats=np.zeros((32,6,100,60))
+    grabbedStats=np.zeros((32,6,100,10))
 else:
-    grabbedStats=np.zeros((32,6,totalIndex,60))
+    grabbedStats=np.zeros((32,6,totalIndex,10))
 grabCount=0
     
 #ParameterStats Map
@@ -1248,16 +1253,13 @@ while frameNumber<=totalFrames:
             absorbanceFlag=True
         else:
             absorbanceFlag=False
-    
     if keypress == ord('g'):
-        
         if liveFlag:
             cv2.imwrite(filePathImageProcessed+osSep+'grabbed_displayFrame'+str(grabCount).zfill(3)+'.jpg', displayFrame)
         else:
             cv2.imwrite(video_file_dir+osSep+video_file_filename+'_displayFrame'+str(grabCount).zfill(3)+'.jpg', displayFrame)
         grabbedStats[:,:,grabCount,:]=parameterStats[:,:,frameIndex,:]
         grabCount=grabCount+1
-        
     if continueFlag==False:
         break
     if changeCameraFlag and dictSet['CAM en'][1]==1:
@@ -1356,7 +1358,7 @@ if frameIndex>0:
         root.withdraw()
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
         #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
-        WriteMultiFrameDataToExcel(parameterStats[:,:,0:frameIndex,:],0,data_file_path)
+        WriteMultiFrameDataToExcel(parameterStats[:,:,0:frameIndex,:],roiList,data_file_path)
 
 # dropSignal=parameterStats[dictSet['CNT yc'][0],dictSet['CNT yc'][1],0:frameIndex,dictSet['CNT yc'][2]]
 # boolDrop=da.hyst(dropSignal, dictSet['CNT hy'][0], dictSet['CNT hy'][1])
