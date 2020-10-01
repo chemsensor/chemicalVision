@@ -523,7 +523,7 @@ def DisplaySomeSettings(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,nu
             ip.OpenCVPutText(displayFrame,str(dictSet[setting][setCol]),(parmWidth*(setCol+2),parmHeight*(numRow+1)),setColor, fontScale = fontScale)
     setKey=settings[activeSettingsRow]
     if (setKey[0:2]=="RO") or (setKey[0:2]=="WB") or (setKey[0:2]=="fg"):
-        setKey[2]="X"
+        setKey=setKey[0:2]+"X"+ setKey[3:]
     settingNameDescription=str(descriptSet[setKey][0])
     settingValueDescription=str(descriptSet[setKey][activeSettingsColumn+1])
     ip.OpenCVPutText(displayFrame, settingNameDescription, (2,displayFrame.shape[1]-75), (0,255,0), fontScale = fontScale)   
