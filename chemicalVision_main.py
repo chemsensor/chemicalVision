@@ -490,7 +490,6 @@ def DisplayAllSettings(dictSet,parmWidth,parmHeight,displayFrame,fontScale):
 
 def DisplaySomeSettings(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,numRowsPad,fontScale):
     settings=sorted(dictSet)
-    settingsDescriptions=sorted(descriptSet)
     
     setRow=0
     activeSettingsRow=dictSet['set rc'][0]
@@ -521,13 +520,19 @@ def DisplaySomeSettings(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,nu
             else:
                 setColor=(255,255,255)
             ip.OpenCVPutText(displayFrame,str(dictSet[setting][setCol]),(parmWidth*(setCol+2),parmHeight*(numRow+1)),setColor, fontScale = fontScale)
+    return displayFrame
+
+def DisplaySomeSettingsDescriptions(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,numRowsPad,fontScale):
+    activeSettingsRow=dictSet['set rc'][0]
+    activeSettingsColumn=dictSet['set rc'][1]
+    settings=sorted(dictSet)
     setKey=settings[activeSettingsRow]
     if (setKey[0:2]=="RO") or (setKey[0:2]=="WB") or (setKey[0:2]=="fg"):
         setKey=setKey[0:2]+"X"+ setKey[3:]
     settingNameDescription=str(descriptSet[setKey][0])
     settingValueDescription=str(descriptSet[setKey][activeSettingsColumn+1])
-    ip.OpenCVPutText(displayFrame, settingNameDescription, (2,displayFrame.shape[1]-75), (0,255,0), fontScale = fontScale)   
-    ip.OpenCVPutText(displayFrame, settingValueDescription, (2,displayFrame.shape[1]-55), (0,255,0), fontScale = fontScale)   
+    ip.OpenCVPutText(displayFrame, settingNameDescription, (2,20), (0,255,0), fontScale = fontScale)   
+    ip.OpenCVPutText(displayFrame, settingValueDescription, (2,40), (0,255,0), fontScale = fontScale)   
     return displayFrame
 
 def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=0):
@@ -1180,8 +1185,15 @@ while frameNumber<=totalFrames:
         settingsFrame = np.zeros((300, 300, 3), np.uint8)
         settingsFrame=DisplaySomeSettings(dictSet,descriptSet,60,24,settingsFrame,4,0.6)
         #cv2.imshow('Settings', settingsFrame)
-        if dictSet['SET ds'][2]!=0:
-            displayFrame=OpenCVComposite(settingsFrame, displayFrame,dictSet['SET ds'])
+        if dictSet['SEV ds'][2]!=0:
+            displayFrame=OpenCVComposite(settingsFrame, displayFrame,dictSet['SEV ds'])
+        
+        settingsDescribeFrame = np.zeros((100, 500, 3), np.uint8)
+        settingsDescribeFrame=DisplaySomeSettingsDescriptions(dictSet,descriptSet,60,24,settingsDescribeFrame,4,0.6)
+        #cv2.imshow('Settings', settingsFrame)
+        if dictSet['SED ds'][2]!=0:
+            displayFrame=OpenCVComposite(settingsDescribeFrame, displayFrame,dictSet['SED ds'])
+            
     elif dictSet['flg ds'][0]==2:
         settingsFrame = np.zeros((1080, 300, 3), np.uint8)
         settingsFrame=DisplayAllSettings(dictSet,20,8,settingsFrame,0.2)
