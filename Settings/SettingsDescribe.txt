@@ -99,7 +99,7 @@
 'flg pf':['',1],
 'flg rc':['',1],
 'flg rf':['',0],
-'flg rn':['',0],
+'FLG rn':['flag run', 'advance frame(1)/pause(0)',0],
 'flg tp':['flag time plots',0],
 'flg wb':['flag white balance first:global second:local',1, 0],
 'frm av':['frames to average',1],

@@ -676,7 +676,7 @@ def CheckKeys(dictSet):
         dictSet=ToggleFlag('flg rf',dictSet)
     #run video
     if keypress == ord('p'):
-        dictSet=ToggleFlag('flg rn',dictSet)
+        dictSet=ToggleFlag('FLG rn',dictSet)
     if keypress == ord('l'):
         frameJump=10
     if keypress == ord('h'):
@@ -1203,7 +1203,7 @@ while frameNumber<=totalFrames:
     
     cv2.imshow('Display', displayFrame)
 
-    if (dictSet['flg rn'][0]==1) & (dictSet['flg rc'][0]==1):
+    if (dictSet['FLG rn'][0]==1) & (dictSet['flg rc'][0]==1):
         outp.write(displayFrame)
 
     keypress,dictSet,continueFlag,changeCameraFlag,frameJump=CheckKeys(dictSet)
@@ -1258,10 +1258,10 @@ while frameNumber<=totalFrames:
         if frameNumber<0:
             frameNumber=0
     elif liveFlag==False and videoFlag:
-        if dictSet['flg rn'][0]==1:
+        if dictSet['FLG rn'][0]==1:
             frameNumber=frameNumber+dictSet['set fr'][0]
     elif liveFlag==True:
-        if (dictSet['flg rn'][0]==1):
+        if (dictSet['FLG rn'][0]==1):
             frameNumber=frameNumber+1
             
 cap.release()
