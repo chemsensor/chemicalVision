@@ -98,6 +98,9 @@ filePathImageProcessed=filePathImage+osSep+'Processed'
 
 font = cv2.FONT_HERSHEY_SIMPLEX
   
+GreyRectangle = False
+ColorRectangle = False
+
 SMTP_SERVER = "imap.gmail.com"
 SMTP_PORT   = 993
 
@@ -970,6 +973,76 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
     return total,decodeFrame
 
 
+#Frame is the pickle juice frame
+#DisplayFrame is the entire frame
+# x, y, w, h of DisplayFrame is calcuated originally
+# we want to translate x,y,w,h to x,y,w,h in Frame
+# Right now ColorROI and pickleSquare are relative to the displayFrame
+# Change it so it's relative to frame which is the pickle juice frame which is 
+# actually rotForDrawing
+def OnMouse(event,x,y,flags,params):
+    global ColorRectangle,ColorRect,ix,iy,ixg,iyg,ColorRectOver,GreyRectangle,GreyRect,GreyRectOver,rebalanceToggle
+    xPickle = (displayFrame.shape[0]*dictSet['RMK ds'][0])/100
+    yPickle = (displayFrame.shape[1]*dictSet['RMK ds'][1])/100
+    widthPickle = (rotForDrawing.shape[0]*dictSet['RMK ds'][2])/100
+    heightPickle = (rotForDrawing.shape[1]*dictSet['RMK ds'][2])/100
+    if event == cv2.EVENT_LBUTTONDOWN:
+            ColorRectangle = True
+            ColorRectOver = False
+            ix,iy = x,y
+            print("click left button: " )
+    elif event == cv2.EVENT_RBUTTONDOWN:
+        print("click right button")
+        if GreyRectOver==True:
+            GreyRectOver=False
+        else:
+            GreyRectangle = True
+            GreyRectOver = False
+            ixg,iyg = x,y
+    elif event == cv2.EVENT_MOUSEMOVE:
+        if ColorRectangle == True:
+            cv2.rectangle(displayFrame,(ix,iy),(x,y),(255,255,255),2) #displayFrame is the image the user is seeing
+            ColorROI = (min(ix,x),min(iy,y),abs(ix-x),abs(iy-y))
+            cv2.imshow('Display',displayFrame)
+            cv2.waitKey(1)
+        if GreyRectangle == True:
+            cv2.rectangle(displayFrame,(ixg,iyg),(x,y),(0,0,0),2)
+            GreyRect = (min(ixg,x),min(iyg,y),abs(ixg-x),abs(iyg-y))
+            cv2.imshow('Display',displayFrame)
+            cv2.waitKey(1)
+    elif event == cv2.EVENT_LBUTTONUP:
+        print("Left button down")
+        ColorRectangle = False
+        if ix!=x & iy!=y:
+            ColorRectOver = True
+            cv2.rectangle(displayFrame,(ix,iy),(x,y),(255,255,255),2)
+            ColorROI = (min(ix,x),min(iy,y),abs(ix-x),abs(iy-y))
+            x1,y1,w,h = ColorROI #ColorROI is the coordinates of the drawn square
+            #displayFrame[0]
+            print(ColorROI)
+            pickleSquare = xPickle, yPickle, widthPickle, heightPickle
+            print(pickleSquare)
+            
+            #RectList.append(ColorRect)
+            cv2.imshow('Display',displayFrame)
+        else:
+            ColorRectOver = False
+    elif event == cv2.EVENT_RBUTTONUP:
+        print("Right button up")
+        GreyRectangle = False
+        if ixg!=x & iyg!=y:
+            GreyRectOver = True
+            cv2.rectangle(displayFrame,(ixg,iyg),(x,y),(0,0,0),2)
+            GreyRect = (min(ixg,x),min(iyg,y),abs(ixg-x),abs(iyg-y))
+            #x1,y1,w,h = GreyRect        
+            #cv2.imshow('Result',img)
+            rebalanceToggle=True
+        else:
+            GreyRectOver = False
+
+
+cv2.namedWindow('Display',cv2.WINDOW_GUI_NORMAL) 
+cv2.setMouseCallback('Display',OnMouse) 
 
 
 if len(video_file_path)!=0:
@@ -1091,7 +1164,7 @@ while frameNumber<=totalFrames:
     displayFrame = np.zeros((displayHeight, displayWidth, 3), np.uint8)
 
     if dictSet['PRE ds'][2]!=0:
-        displayFrame=OpenCVComposite(frame, displayFrame,dictSet['PRE ds'])
+        displayFrame=OpenCVComposite(frame, displayFrame,dictSet['PRE ds']) #put frame onto displayFrame
 
     # if (dictSet['CM2 ds'][2]!=0) & (dictSet['CM2 en'][0]!=-1) and (liveFlag):
     #     frameCrop2=frame2[dictSet['CM2 xy'][0]:dictSet['CM2 xy'][0]+dictSet['CM2 wh'][0],dictSet['CM2 xy'][1]:dictSet['CM2 xy'][1]+dictSet['CM2 wh'][1],:]

@@ -212,9 +212,9 @@ if RecordFlag:
     #outr = cv2.VideoWriter("Recorded Titration 12_3_15.avi",fourcc, 30.0, (640, 480))
 
 
-cv2.namedWindow('Result',cv2.WINDOW_GUI_NORMAL)
+cv2.namedWindow('Result',cv2.WINDOW_GUI_NORMAL) #use this
 #cv2.namedWindow('Result')
-cv2.setMouseCallback('Result',onmouse)
+cv2.setMouseCallback('Result',onmouse) #use this
 FrameRate= cap.get(cv2.CAP_PROP_FPS)
 TotalFrames=cap.get(cv2.CAP_PROP_FRAME_COUNT)
 TotalFrames=200000

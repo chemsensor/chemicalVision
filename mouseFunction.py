@@ -52,3 +52,7 @@ def onmouse(event,x,y,flags,params):
             rebalanceToggle=True
         else:
             GreyRectOver = False
+
+
+cv2.namedWindow('Result',cv2.WINDOW_GUI_NORMAL) 
+cv2.setMouseCallback('Result',onmouse) 
