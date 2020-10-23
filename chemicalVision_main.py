@@ -982,10 +982,10 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
 # actually rotForDrawing
 def OnMouse(event,x,y,flags,params):
     global ColorRectangle,ColorRect,ix,iy,ixg,iyg,ColorRectOver,GreyRectangle,GreyRect,GreyRectOver,rebalanceToggle
-    xPickle = (displayFrame.shape[0]*dictSet['RMK ds'][0])/100
-    yPickle = (displayFrame.shape[1]*dictSet['RMK ds'][1])/100
-    widthPickle = (rotForDrawing.shape[0]*dictSet['RMK ds'][2])/100
-    heightPickle = (rotForDrawing.shape[1]*dictSet['RMK ds'][2])/100
+    xPickle = int((displayFrame.shape[0]*dictSet['RMK ds'][0])/100)
+    yPickle = int((displayFrame.shape[1]*dictSet['RMK ds'][1])/100)
+    widthPickle = int((rotForDrawing.shape[0]*dictSet['RMK ds'][2])/100)
+    heightPickle = int((rotForDrawing.shape[1]*dictSet['RMK ds'][2])/100)
     if event == cv2.EVENT_LBUTTONDOWN:
             ColorRectangle = True
             ColorRectOver = False
@@ -1021,7 +1021,13 @@ def OnMouse(event,x,y,flags,params):
             #displayFrame[0]
             print(ColorROI)
             pickleSquare = xPickle, yPickle, widthPickle, heightPickle
+            xPickleFormatted = x1 - xPickle
+            yPickleFormatted = y1 - yPickle
+            widthPickleFormatted = w - widthPickle
+            heightPickleFormatted = h - heightPickle
+            formattedPickleSquare = xPickleFormatted, yPickleFormatted, widthPickleFormatted, heightPickleFormatted
             print(pickleSquare)
+            print(formattedPickleSquare)
             
             #RectList.append(ColorRect)
             cv2.imshow('Display',displayFrame)
