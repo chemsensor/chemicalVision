@@ -164,11 +164,6 @@ settingsFile = open(settings_file_path,'r')
 settingString=settingsFile.read()
 settingsFile.close()
 dictSet=eval(settingString)
-settings_description_file=filePathSettings+osSep+"SettingsDescribe.txt"
-settingsDesc = open(settings_description_file,'r')
-settingDescString=settingsDesc.read()
-settingsDesc.close()
-descriptSet=eval(settingDescString)
 print('Running, press "q" to quit')
 
 def FindLargestContour(mask):
@@ -467,11 +462,11 @@ def OpenCVComposite(sourceImage, targetImage,settingsWHS):
 
 def DisplayAllSettings(dictSet,parmWidth,parmHeight,displayFrame,fontScale):
     setRow=0
-    activeSettingsRow=dictSet['SET rc'][0]
-    activeSettingsColumn=dictSet['SET rc'][1]
+    activeSettingsRow=dictSet['set rc'][0]
+    activeSettingsColumn=dictSet['set rc'][1]
     if activeSettingsColumn>len(dictSet[sorted(dictSet)[activeSettingsRow]])-1:
         activeSettingsColumn=len(dictSet[sorted(dictSet)[activeSettingsRow]])-1
-        dictSet['SET rc'][1]=activeSettingsColumn
+        dictSet['set rc'][1]=activeSettingsColumn
     for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)): 
         if (activeSettingsRow==setRow):
             setColor=(0,0,255)
@@ -488,11 +483,11 @@ def DisplayAllSettings(dictSet,parmWidth,parmHeight,displayFrame,fontScale):
             ip.OpenCVPutText(displayFrame,str(dictSet[setting][setCol]),(parmWidth*(setCol+2),parmHeight*(setRow+1)),setColor, fontScale = fontScale)
     return displayFrame
 
-def DisplaySomeSettings(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,numRowsPad,fontScale):
+def DisplaySomeSettings(dictSet,parmWidth,parmHeight,displayFrame,numRowsPad,fontScale):
     settings=sorted(dictSet)
     setRow=0
-    activeSettingsRow=dictSet['SET rc'][0]
-    activeSettingsColumn=dictSet['SET rc'][1]
+    activeSettingsRow=dictSet['set rc'][0]
+    activeSettingsColumn=dictSet['set rc'][1]
     if activeSettingsRow-numRowsPad>=0:
         startRow=activeSettingsRow-numRowsPad
     else:
@@ -504,7 +499,7 @@ def DisplaySomeSettings(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,nu
     numRows=endRow-startRow
     if activeSettingsColumn>len(dictSet[settings[activeSettingsRow]])-1:
         activeSettingsColumn=len(dictSet[settings[activeSettingsRow]])-1
-        dictSet['SET rc'][1]=activeSettingsColumn
+        dictSet['set rc'][1]=activeSettingsColumn
     for numRow,setRow,setting in zip(range(numRows),range(startRow,endRow),settings[startRow:endRow]): 
         if (activeSettingsRow==setRow):
             setColor=(0,0,255)
@@ -519,19 +514,6 @@ def DisplaySomeSettings(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,nu
             else:
                 setColor=(255,255,255)
             ip.OpenCVPutText(displayFrame,str(dictSet[setting][setCol]),(parmWidth*(setCol+2),parmHeight*(numRow+1)),setColor, fontScale = fontScale)
-    return displayFrame
-
-def DisplaySomeSettingsDescriptions(dictSet,descriptSet,parmWidth,parmHeight,displayFrame,numRowsPad,fontScale):
-    activeSettingsRow=dictSet['SET rc'][0]
-    activeSettingsColumn=dictSet['SET rc'][1]
-    settings=sorted(dictSet)
-    setKey=settings[activeSettingsRow]
-    if (setKey[0:2]=="RO") or (setKey[0:2]=="WB") or (setKey[0:2]=="fg"):
-        setKey=setKey[0:2]+"X"+ setKey[3:]
-    settingNameDescription=str(descriptSet[setKey][0])
-    settingValueDescription=str(descriptSet[setKey][activeSettingsColumn+1])
-    ip.OpenCVPutText(displayFrame, settingNameDescription, (2,20), (0,255,0), fontScale = fontScale)   
-    ip.OpenCVPutText(displayFrame, settingValueDescription, (2,40), (0,255,0), fontScale = fontScale)   
     return displayFrame
 
 def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=0):
@@ -666,15 +648,16 @@ def CheckKeys(dictSet):
         dictSet=ToggleFlag('flg di',dictSet)
     #display settings
     if keypress == ord('t'):
-        dictSet=ToggleFlag('FLG ds',dictSet)
+        dictSet=ToggleFlag('flg ds',dictSet)
     #record
     if keypress == ord('r'):
-        dictSet=ToggleFlag('FLG rc',dictSet)
+        dictSet=ToggleFlag('flg rc',dictSet)
     #register image
-
+    if keypress == ord('c'):
+        dictSet=ToggleFlag('flg rf',dictSet)
     #run video
     if keypress == ord('p'):
-        dictSet=ToggleFlag('FLG rn',dictSet)
+        dictSet=ToggleFlag('flg rn',dictSet)
     if keypress == ord('l'):
         frameJump=10
     if keypress == ord('h'):
@@ -683,14 +666,9 @@ def CheckKeys(dictSet):
         frameJump=1
     if keypress == ord('j'):
         frameJump=-1
-    if dictSet['FLG ds'][0]==1:
-        try:
-            row=dictSet['SET rc'][0]
-            col=dictSet['SET rc'][1]
-        except:
-            dictSet['SET rc']=[0,0]
-            row=dictSet['SET rc'][0]
-            col=dictSet['SET rc'][1]
+    if dictSet['flg ds'][0]==1:
+        row=dictSet['set rc'][0]
+        col=dictSet['set rc'][1]
         if sorted(dictSet)[row][5]=='l':
             hLimit=255
             lLimit=0
@@ -722,13 +700,13 @@ def CheckKeys(dictSet):
             if sorted(dictSet)[row].find('CAM')==0:
                 changeCameraFlag=True
         if ((keypress==upArrow) | (keypress==ord('w'))) & (row>0):
-            dictSet['SET rc'][0]=row-1
+            dictSet['set rc'][0]=row-1
         if ((keypress==dnArrow) | (keypress==ord('s'))) & (row<len(dictSet)-1):
-            dictSet['SET rc'][0]=row+1
+            dictSet['set rc'][0]=row+1
         if ((keypress==ltArrow) | (keypress==ord('a'))) & (col>0):
-            dictSet['SET rc'][1]=col-1
+            dictSet['set rc'][1]=col-1
         if ((keypress==rtArrow) | (keypress==ord('d'))) & (col<len(dictSet[sorted(dictSet)[row]])-1):
-            dictSet['SET rc'][1]=col+1
+            dictSet['set rc'][1]=col+1
     return(keypress,dictSet,continueFlag,changeCameraFlag,frameJump)
 
 def MakeTimePlots(parameterStats,dictSet,displayFrame,frameStart=0,frameEnd=0):
@@ -999,9 +977,11 @@ if len(video_file_path)!=0:
     totalFrames=int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     liveFlag=False
     outFileName=video_file_path+'Processed.mp4'
+    outFileNameRaw=video_file_path+'UnProcessed.mp4'
 else:
     liveFlag=True
     outFileName=os.getcwd()+'\\Processed.avi'
+    outFileNameRaw=os.getcwd()+'\\UnProcessed.avi'
     #outFileName=os.getcwd()+'\\'+time.ctime()+'_Processed.avi'
     if versionOS=='W':
         cap = cv2.VideoCapture(int(dictSet['CAM en'][0])+cv2.CAP_DSHOW)
@@ -1064,21 +1044,25 @@ else:
     frameRate=0
     ret, originalFrame = cap.read() 
 
-outp = cv2.VideoWriter(outFileName,fourcc, frameRate, (dictSet['DSP wh'][0], dictSet['DSP wh'][1]))
+outp = cv2.VideoWriter(outFileName,fourcc, frameRate, (dictSet['dsp wh'][0], dictSet['dsp wh'][1]))
+if (dictSet['FRM or'][0]==1) or dictSet['FRM or'][0]==3:
+    outup = cv2.VideoWriter(outFileNameRaw,fourcc, frameRate, (dictSet['CAM wh'][1], dictSet['CAM wh'][0]))
+else:
+    outup = cv2.VideoWriter(outFileNameRaw,fourcc, frameRate, (dictSet['CAM wh'][0], dictSet['CAM wh'][1]))
     
 while frameNumber<=totalFrames:
     if videoFlag:
         if liveFlag!=True:
             cap.set(cv2.CAP_PROP_POS_FRAMES,frameNumber)
             frameRate=cap.get(cv2.CAP_PROP_FPS)
-        if (dictSet['FRM av'][0]>1):
+        if (dictSet['frm av'][0]>1):
             ret, frame = cap.read() 
             frameAcc=np.zeros((frame.shape), np.uint32)
             frameAcc=frameAcc+frame
-            for frameNumber in range(dictSet['FRM av'][0]-1):
+            for frameNumber in range(dictSet['frm av'][0]-1):
                 ret, frame = cap.read() 
                 frameAcc=frameAcc+frame
-            frame=(frameAcc/dictSet['FRM av'][0]).astype(np.uint8)
+            frame=(frameAcc/dictSet['frm av'][0]).astype(np.uint8)
         else:
             ret, frame = cap.read() 
         if (dictSet['CM2 en'][0]!=-1) and (liveFlag):
@@ -1102,8 +1086,8 @@ while frameNumber<=totalFrames:
         
     #parameterStats[31,0,frameNumber,:]=currentTime
 
-    displayWidth=dictSet['DSP wh'][0]
-    displayHeight=dictSet['DSP wh'][1]
+    displayWidth=dictSet['dsp wh'][0]
+    displayHeight=dictSet['dsp wh'][1]
     displayFrame = np.zeros((displayHeight, displayWidth, 3), np.uint8)
 
     if dictSet['PRE ds'][2]!=0:
@@ -1133,10 +1117,9 @@ while frameNumber<=totalFrames:
     else:
         mass=-1
     
-    if dictSet['CM3 en'][0]!=-1:
-        if (dictSet['CM3 ds'][2]!=0) and (liveFlag):
-            frameCrop3=frame3[dictSet['CM3 xy'][0]:dictSet['CM3 xy'][0]+dictSet['CM3 wh'][0],dictSet['CM3 xy'][1]:dictSet['CM3 xy'][1]+dictSet['CM3 wh'][1],:]
-            displayFrame=OpenCVComposite(frameCrop3, displayFrame,dictSet['CM3 ds'])
+    if (dictSet['CM3 ds'][2]!=0) & (dictSet['CM3 en'][0]!=-1) and (liveFlag):
+        frameCrop3=frame3[dictSet['CM3 xy'][0]:dictSet['CM3 xy'][0]+dictSet['CM3 wh'][0],dictSet['CM3 xy'][1]:dictSet['CM3 xy'][1]+dictSet['CM3 wh'][1],:]
+        displayFrame=OpenCVComposite(frameCrop3, displayFrame,dictSet['CM3 ds'])
 
     roiList=[]
     for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
@@ -1149,7 +1132,7 @@ while frameNumber<=totalFrames:
             if (dictSet[setting][0]!=0) & (dictSet[setting][1]!=0):
                 wbList.append(setting[0:3])
                 
-    if dictSet['FLG pf'][0]!=0:
+    if dictSet['flg pf'][0]!=0:
         frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList)
         parameterStats[0:16,:,frameNumber,0:frameStats.shape[2]]=frameStats
         parameterStats[16,0,frameNumber,:]=mass
@@ -1162,15 +1145,11 @@ while frameNumber<=totalFrames:
         parameterStats[29,0,frameNumber,:]=frameRate
         parameterStats[30,0,frameNumber,:]=frameNumber
         parameterStats[31,0,frameNumber,:]=1
-    else:
-        rotImage=frame
-        rotForDrawing=frame
-        frameForDrawing=frame
 
-    if dictSet['FLG tp'][0]!=0:
+    if dictSet['flg tp'][0]!=0:
         displayFrame=MakeTimePlots(parameterStats,dictSet,displayFrame)
 
-    if dictSet['FLG fp'][0]!=0:
+    if dictSet['flg fp'][0]!=0:
         roiSetName='RO1'
         if absorbanceFlag==True:
             displayFrame,signal=MakeFramePlots(dictSet,displayFrame,frame[dictSet[roiSetName+' xy'][1]:dictSet[roiSetName+' xy'][1]+dictSet[roiSetName+' wh'][1], dictSet[roiSetName+' xy'][0]:dictSet[roiSetName+' xy'][0]+dictSet[roiSetName+' wh'][0]],blankData,calFlag=False)
@@ -1189,20 +1168,13 @@ while frameNumber<=totalFrames:
     if dictSet['RMK ds'][2]!=0:
         displayFrame=OpenCVComposite(rotForDrawing, displayFrame,dictSet['RMK ds'])
         
-    if dictSet['FLG ds'][0]==1:
+    if dictSet['flg ds'][0]==1:
         settingsFrame = np.zeros((300, 300, 3), np.uint8)
-        settingsFrame=DisplaySomeSettings(dictSet,descriptSet,60,24,settingsFrame,4,0.6)
+        settingsFrame=DisplaySomeSettings(dictSet,60,24,settingsFrame,5,0.6)
         #cv2.imshow('Settings', settingsFrame)
-        if dictSet['SEV ds'][2]!=0:
-            displayFrame=OpenCVComposite(settingsFrame, displayFrame,dictSet['SEV ds'])
-        
-        settingsDescribeFrame = np.zeros((100, 500, 3), np.uint8)
-        settingsDescribeFrame=DisplaySomeSettingsDescriptions(dictSet,descriptSet,60,24,settingsDescribeFrame,4,0.6)
-        #cv2.imshow('Settings', settingsFrame)
-        if dictSet['SED ds'][2]!=0:
-            displayFrame=OpenCVComposite(settingsDescribeFrame, displayFrame,dictSet['SED ds'])
-            
-    elif dictSet['FLG ds'][0]==2:
+        if dictSet['SET ds'][2]!=0:
+            displayFrame=OpenCVComposite(settingsFrame, displayFrame,dictSet['SET ds'])
+    elif dictSet['flg ds'][0]==2:
         settingsFrame = np.zeros((1080, 300, 3), np.uint8)
         settingsFrame=DisplayAllSettings(dictSet,20,8,settingsFrame,0.2)
         cv2.imshow('Settings', settingsFrame)
@@ -1211,8 +1183,9 @@ while frameNumber<=totalFrames:
     
     cv2.imshow('Display', displayFrame)
 
-    if (dictSet['FLG rn'][0]==1) & (dictSet['FLG rc'][0]==1):
+    if (dictSet['flg rn'][0]==1) & (dictSet['flg rc'][0]==1):
         outp.write(displayFrame)
+        outup.write(frame)
 
     keypress,dictSet,continueFlag,changeCameraFlag,frameJump=CheckKeys(dictSet)
     
@@ -1266,14 +1239,15 @@ while frameNumber<=totalFrames:
         if frameNumber<0:
             frameNumber=0
     elif liveFlag==False and videoFlag:
-        if dictSet['FLG rn'][0]==1:
-            frameNumber=frameNumber+dictSet['VID fr'][0]
+        if dictSet['flg rn'][0]==1:
+            frameNumber=frameNumber+dictSet['set fr'][0]
     elif liveFlag==True:
-        if (dictSet['FLG rn'][0]==1):
+        if (dictSet['flg rn'][0]==1):
             frameNumber=frameNumber+1
             
 cap.release()
 outp.release()
+outup.release()
 if (dictSet['CM2 en'][0]!=-1) and (liveFlag):
     cap2.release()
 if (dictSet['CM3 en'][0]!=-1) and (liveFlag):
