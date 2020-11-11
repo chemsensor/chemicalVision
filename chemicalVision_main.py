@@ -1077,6 +1077,13 @@ while frameNumber<=totalFrames:
             break
     else:
         frame = np.copy(originalFrame)
+    
+    if dictSet['flg wb'][1]==1:
+        rfactor=dictSet['FRM wb'][0]/100.0
+        gfactor=dictSet['FRM wb'][1]/100.0
+        bfactor=dictSet['FRM wb'][2]/100.0
+        frame=ip.OpenCVRebalanceImage(frame,rfactor,gfactor,bfactor)
+        
     if dictSet['FRM or'][0]==1:
         frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
     elif dictSet['FRM or'][0]==2:
