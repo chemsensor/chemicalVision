@@ -986,6 +986,7 @@ def OnMouse(event,x,y,flags,params):
     yPickle = int((displayFrame.shape[0]*dictSet['RMK ds'][1])/100)
     widthPickle = int((rotForDrawing.shape[1]*dictSet['RMK ds'][2])/100)
     heightPickle = int((rotForDrawing.shape[0]*dictSet['RMK ds'][2])/100)
+    rightPickleBound = widthPickle
     if event == cv2.EVENT_LBUTTONDOWN:
             ColorRectangle = True
             ColorRectOver = False
@@ -1025,10 +1026,31 @@ def OnMouse(event,x,y,flags,params):
             yPickleFormatted = (y1 - yPickle)/(dictSet['RMK ds'][2]/100)
             widthPickleFormatted = w/(dictSet['RMK ds'][2]/100)
             heightPickleFormatted = h/(dictSet['RMK ds'][2]/100)
-            formattedPickleSquare = xPickleFormatted, yPickleFormatted, widthPickleFormatted, heightPickleFormatted
+            formattedPickleSquare = int(xPickleFormatted), int(yPickleFormatted), int(widthPickleFormatted), int(heightPickleFormatted)
             print(pickleSquare)
             print(formattedPickleSquare)
             
+            
+            widthPickleScaled = widthPickle/(dictSet['RMK ds'][2]/100)
+            heightPickleScaled = heightPickle/(dictSet['RMK ds'][2]/100)
+            
+            if xPickleFormatted < 0:
+                xPickleFormatted = 0 #if x < xPickleFrame set xPickle as x
+            
+            if yPickleFormatted < 0:
+                yPickleFormatted = 0
+            
+            if xPickleFormatted + widthPickleFormatted > widthPickleScaled:
+                widthPickleFormatted = widthPickleScaled - xPickleFormatted
+            
+            if yPickleFormatted + heightPickleFormatted > heightPickleScaled:
+                heightPickleFormatted = heightPickleScaled - yPickleFormatted
+            
+            print("TESTING")
+            formattedPickleSquare = int(xPickleFormatted), int(yPickleFormatted), int(widthPickleFormatted), int(heightPickleFormatted)
+            print(formattedPickleSquare)
+
+
             #color rect should store value after its been bounded and converted into integers
             ColorRect = formattedPickleSquare
             #RectList.append(ColorRect)
