@@ -387,8 +387,7 @@ def RegisterImageColorCard(frame,frameForDrawing,dictSet):
             ptsImage[2,0]=ptsFound[3,0]
             ptsImage[2,1]=ptsFound[3,1]
         Mrot = cv2.getPerspectiveTransform(ptsImage,ptsCard)
-        #the last tulpe below needs to be in settings
-        rotImage = cv2.warpPerspective(frame,Mrot,(1800,1200))
+        rotImage = cv2.warpPerspective(frame,Mrot,(dictSet['cim wh'][0],dictSet['cim wh'][1]))
         return(rotImage,frameForDrawing)
     else:
         return(np.array([0]),frameForDrawing)
@@ -574,7 +573,7 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"]):
         if rotImage.size==1:
             skipFrame=True
             rotImage = np.copy(frame)
-    if dictSet['flg rf'][0]==2:
+    elif dictSet['flg rf'][0]==2:
         rotImage,frameForDrawing = RegisterImageColorRectangle(frame,frameForDrawing,dictSet)
         #rotImage,frameForDrawing = RegisterImageColorRectangleFlex(frame,frameForDrawing,?????)
         #RegisterImageColorRectangleFlex(frame,frameForDrawing,boxLL,boxUL,boxC1,boxC2,boxC3,boxC4,boxOR,boxWH)
