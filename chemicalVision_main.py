@@ -141,7 +141,7 @@ for chan in range(256):
 root = tk.Tk()
 root.withdraw()
 root.wm_attributes('-topmost', 1)
-video_file_path = askopenfilename(initialdir=filePathImage,filetypes=[('image files', '*.jpg | *.jpeg | *.png'),('video files', '*.mp4 | *.mkv | *.avi'),('all files', '.*')])
+video_file_path = askopenfilename(initialdir=filePathImage,filetypes=[('image files', '*.jpg | *.jpeg | *.png'),('video files', '*.mp4 | *.mkv | *.avi | *.MOV'),('all files', '.*')])
 if len(video_file_path)!=0:
     video_file_pathSplit = os.path.split(video_file_path)
     video_file_dir=video_file_pathSplit[0]
@@ -388,7 +388,7 @@ def RegisterImageColorCard(frame,frameForDrawing,dictSet):
             ptsImage[2,1]=ptsFound[3,1]
         Mrot = cv2.getPerspectiveTransform(ptsImage,ptsCard)
         #the last tulpe below needs to be in settings
-        rotImage = cv2.warpPerspective(frame,Mrot,(2600,900))
+        rotImage = cv2.warpPerspective(frame,Mrot,(1800,1200))
         return(rotImage,frameForDrawing)
     else:
         return(np.array([0]),frameForDrawing)
