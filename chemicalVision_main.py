@@ -1083,7 +1083,9 @@ while frameNumber<=totalFrames:
         frame = cv2.rotate(frame, cv2.ROTATE_180)
     elif dictSet['FRM or'][0]==3:
         frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        
+    
+    if frame.shape[2]>3:
+        frame=frame[:,:,0:3]
     #parameterStats[31,0,frameNumber,:]=currentTime
 
     displayWidth=dictSet['dsp wh'][0]
