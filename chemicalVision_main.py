@@ -744,7 +744,7 @@ def MakeTimePlots(parameterStats,dictSet,displayFrame,frameStart=0,frameEnd=0):
 def MakeFramePlots(dictSet,displayFrame,rgbROI,blankData=np.array([]),calFlag=False):
     pltList=[]
     for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
-        if (setting[0:2]=="ff") & (setting[4:6]=="wh"):
+        if (setting[0:2]=="fg") & (setting[4:6]=="wh"):
             if (dictSet[setting][0]!=0) & (dictSet[setting][1]!=0):
                 pltList.append(setting[0:3])
     rgbROI=cv2.LUT(rgbROI, linLUTfloat)
