@@ -637,6 +637,25 @@ def ToggleFlag(flagName,dictSet):
         dictSet[flagName][0]=1
     return dictSet
     
+def AddNewRegion(dictSet):
+    currentVal = 0
+    for setting in range(len(dictSet)):
+        if (setting[0:2]=="RO"):
+            if(int(setting[2]) > currentVal):
+                currentVal = int(setting[2])
+    currentVal = currentVal + 1
+    dictSet['RO' + str(currentVal) + ' cs'] = [0,0,0]
+    dictSet['RO' + str(currentVal) + ' ct'] = 0
+    dictSet['RO' + str(currentVal) + ' ds'] = [0,0,0]
+    dictSet['RO' + str(currentVal) + ' hs'] = [0,0,0]
+    dictSet['RO' + str(currentVal) + ' ll'] = [0,0,0]
+    dictSet['RO' + str(currentVal) + ' ul'] = [255,255,255]
+    dictSet['RO' + str(currentVal) + ' wh'] = [0,0,0]
+    dictSet['RO' + str(currentVal) + ' xy'] = [0,0,0]
+    #dict_set['RO' + str(currentVal) + ' cs']
+
+
+
 def CheckKeys(dictSet):
     keypress=cv2.waitKeyEx(1)
     #print(keypress)
@@ -669,6 +688,9 @@ def CheckKeys(dictSet):
         frameJump=1
     if keypress == ord('j'):
         frameJump=-1
+    if keypress == ord('n'): #append new region of interest
+        AddNewRegion()
+        
     if dictSet['flg ds'][0]==1:
         row=dictSet['set rc'][0]
         col=dictSet['set rc'][1]
@@ -986,7 +1008,7 @@ def OnMouse(event,x,y,flags,params):
     yPickle = int((displayFrame.shape[0]*dictSet['RMK ds'][1])/100)
     widthPickle = int((rotForDrawing.shape[1]*dictSet['RMK ds'][2])/100)
     heightPickle = int((rotForDrawing.shape[0]*dictSet['RMK ds'][2])/100)
-    rightPickleBound = widthPickle
+    #rightPickleBound = widthPickle
     if event == cv2.EVENT_LBUTTONDOWN:
             ColorRectangle = True
             ColorRectOver = False
