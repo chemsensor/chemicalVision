@@ -1045,11 +1045,11 @@ else:
     totalFrames=10000
 
 totalIndex=int(totalFrames/dictSet['set fr'][0])
-parameterStats=np.zeros((32,6,totalIndex+dictSet['set fr'][0],10))
+parameterStats=np.zeros((32,6,totalIndex+dictSet['set fr'][0],5))
 if totalFrames==1:
     grabbedStats=np.zeros((32,6,100,10))
 else:
-    grabbedStats=np.zeros((32,6,totalIndex,10))
+    grabbedStats=np.zeros((32,6,totalIndex,5))
 grabCount=0
     
 #ParameterStats Map
