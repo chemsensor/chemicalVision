@@ -1272,6 +1272,18 @@ if (saveSettings=="Y") | (saveSettings=="y"):
     settingsFile.write(outString)
     settingsFile.close()
 
+if dictSet['flg fp'][0]!=0:
+    saveSettings = input("Save signal values (Y/n)?")
+    if (saveSettings=="Y") | (saveSettings=="y"):
+        root = tk.Tk()
+        root.withdraw()
+        data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'frameData',defaultextension='.xlsx')
+        dfSignal=pd.DataFrame(data=signal)
+        writer = pd.ExcelWriter(data_file_path, engine='xlsxwriter')
+        workbook  = writer.book
+        dfSignal.to_excel(writer, sheet_name='Signal',index=True)
+        writer.save()
+
 if (videoFlag==False) and (frameNumber>0):
     saveSettings = input("Save single frame values (Y/n)?")
     if (saveSettings=="Y") | (saveSettings=="y"):
