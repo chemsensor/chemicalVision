@@ -636,13 +636,21 @@ def ToggleFlag(flagName,dictSet):
     else:
         dictSet[flagName][0]=1
     return dictSet
-    
+
+
+
+##########################
+# Here is the function we are working on
+# at the end of Fall 2020!
+#
+##########################
 def AddNewRegion(dictSet):
     currentVal = 0
-    for setting in range(len(dictSet)):
-        if (setting[0:2]=="RO"):
-            if(int(setting[2]) > currentVal):
-                currentVal = int(setting[2])
+    for settings in range(len(dictSet)):
+        #print(setting)
+        if (settings[0:2]=="RO"):
+            if(int(settings[2]) > currentVal):
+                currentVal = int(settings[2])
     currentVal = currentVal + 1
     dictSet['RO' + str(currentVal) + ' cs'] = [0,0,0]
     dictSet['RO' + str(currentVal) + ' ct'] = 0
@@ -689,7 +697,7 @@ def CheckKeys(dictSet):
     if keypress == ord('j'):
         frameJump=-1
     if keypress == ord('n'): #append new region of interest
-        AddNewRegion()
+        AddNewRegion(dictSet)
         
     if dictSet['flg ds'][0]==1:
         row=dictSet['set rc'][0]
