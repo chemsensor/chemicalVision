@@ -142,7 +142,7 @@ for chan in range(256):
 root = tk.Tk()
 root.withdraw()
 root.wm_attributes('-topmost', 1)
-video_file_path = askopenfilename(initialdir=filePathImage,filetypes=[('image files', '*.jpg | *.jpeg | *.png'),('video files', '*.mp4 | *.mkv | *.avi'),('all files', '.*')])
+video_file_path = askopenfilename(initialdir=filePathImage,filetypes=[('image files', '*.jpg | *.jpeg | *.png'),('video files', '*.mp4 | *.mkv | *.avi | *.MOV'),('all files', '.*')])
 if len(video_file_path)!=0:
     video_file_pathSplit = os.path.split(video_file_path)
     video_file_dir=video_file_pathSplit[0]
@@ -575,7 +575,7 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"]):
         if rotImage.size==1:
             skipFrame=True
             rotImage = np.copy(frame)
-    if dictSet['flg rf'][0]==2:
+    elif dictSet['flg rf'][0]==2:
         rotImage,frameForDrawing = RegisterImageColorRectangle(frame,frameForDrawing,dictSet)
         #rotImage,frameForDrawing = RegisterImageColorRectangleFlex(frame,frameForDrawing,?????)
         #RegisterImageColorRectangleFlex(frame,frameForDrawing,boxLL,boxUL,boxC1,boxC2,boxC3,boxC4,boxOR,boxWH)
@@ -814,19 +814,21 @@ def WriteMultiFrameDataToExcel(parameterStats,roiNumber,outExcelFileName):
     worksheetData.write('A2', 'FrameNumber')
     worksheetData.write('B2', 'FrameRate')
     worksheetData.write('C2', 'Time')
-    worksheetData.write('D2', 'Area')
-    worksheetData.write('E2', 'Height')
-    worksheetData.write('F2', 'Width')
-    worksheetData.write('G2', 'ContourArea')
-    worksheetData.write('H2', 'Mass')
+    worksheetData.write('D2', 'Signal')
+    worksheetData.write('E2', 'Area')
+    worksheetData.write('F2', 'Height')
+    worksheetData.write('G2', 'Width')
+    worksheetData.write('H2', 'ContourArea')
+    worksheetData.write('I2', 'Mass')
     worksheetData.write_column('A3', parameterStats[30,0,dfCollected,roiNumber])
     worksheetData.write_column('B3', parameterStats[29,0,dfCollected,roiNumber])
     worksheetData.write_column('C3', parameterStats[28,0,dfCollected,roiNumber])
-    worksheetData.write_column('D3', parameterStats[12,0,dfCollected,roiNumber])
-    worksheetData.write_column('E3', parameterStats[13,0,dfCollected,roiNumber])
-    worksheetData.write_column('F3', parameterStats[14,0,dfCollected,roiNumber])
-    worksheetData.write_column('G3', parameterStats[15,0,dfCollected,roiNumber])
-    worksheetData.write_column('H3', parameterStats[16,0,dfCollected,roiNumber])
+    worksheetData.write_column('D3', parameterStats[20,0,dfCollected,roiNumber])
+    worksheetData.write_column('E3', parameterStats[12,0,dfCollected,roiNumber])
+    worksheetData.write_column('F3', parameterStats[13,0,dfCollected,roiNumber])
+    worksheetData.write_column('G3', parameterStats[14,0,dfCollected,roiNumber])
+    worksheetData.write_column('H3', parameterStats[15,0,dfCollected,roiNumber])
+    worksheetData.write_column('I3', parameterStats[16,0,dfCollected,roiNumber])
     #workbook.close()
     writer.save()
 
@@ -1139,6 +1141,7 @@ while frameNumber<=totalFrames:
         frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList)
         parameterStats[0:16,:,frameNumber,0:frameStats.shape[2]]=frameStats
         parameterStats[16,0,frameNumber,:]=mass
+        parameterStats[20,0,frameNumber,0]=parameterStats[dictSet['SIG c1'][0],0,frameNumber,dictSet['SIG c1'][1]]*dictSet['SIG c1'][2]+parameterStats[dictSet['SIG c2'][0],0,frameNumber,dictSet['SIG c2'][1]]*dictSet['SIG c2'][2]
         if liveFlag:
             parameterStats[28,0,frameNumber,:]=time.time()
         elif videoFlag:
