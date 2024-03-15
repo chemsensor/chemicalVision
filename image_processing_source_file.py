@@ -89,10 +89,10 @@ def OpenCVDisplayedScatter(img, xdata,ydata,x,y,w,h,color, circleThickness,ydata
         yscale=float(hData)/ydataRange
     else:
         yscale=1
-    xdata=((xdata-xdataRangemin)*xscale).astype(np.int)
+    xdata=((xdata-xdataRangemin)*xscale).astype(np.int32)
     xdata[xdata>w]=w
     xdata[xdata<0]=0
-    ydata=((ydataRangemax-ydata)*yscale).astype(np.int)
+    ydata=((ydataRangemax-ydata)*yscale).astype(np.int32)
     ydata[ydata>h]=h
     ydata[ydata<0]=0
     cv2.rectangle(img,(xDataStart,yDataStart),(xDataEnd,yDataEnd),color,1)

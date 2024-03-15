@@ -360,37 +360,40 @@ def RegisterImageColorCard(frame,frameForDrawing,dictSet):
     c12CircleMask = cv2.inRange(hsvFrame, np.array(dictSet['c12 ll']), np.array(dictSet['c12 ul'])) 
     c34CircleMask = cv2.inRange(hsvFrame, np.array(dictSet['c34 ll']), np.array(dictSet['c34 ul'])) 
     outerBoxContour,boxArea,boxBoundingRectangle=FindLargestContour(boxMask)
-    cv2.drawContours(frameForDrawing,[outerBoxContour],0,(0,255,0),2)
-    ptsC12 = FindContoursInside(c12CircleMask,outerBoxContour,boxArea*0.005,boxArea*0.25,(255,0,0),frameForDrawing)    
-    ptsC34 = FindContoursInside(c34CircleMask,outerBoxContour,boxArea*0.005,boxArea*0.25,(0,0,255),frameForDrawing)    
-    ptsFound = np.concatenate((ptsC12, ptsC34), axis=0) 
-    ptsCard = np.float32([[dictSet['cl1 xy'][0],dictSet['cl1 xy'][1]],[dictSet['cl2 xy'][0],dictSet['cl2 xy'][1]],[dictSet['cl3 xy'][0],dictSet['cl3 xy'][1]],[dictSet['cl4 xy'][0],dictSet['cl4 xy'][1]]])
-    ptsImage = np.float32([[135,220],[765,220],[135,1095],[765,1095]]) 
-    if ptsFound.shape[0]==4:
-        if (cv2.pointPolygonTest(outerBoxContour,ip.MidPoint(ptsFound[0,0:2],ptsFound[2,0:2]),False)==-1) & (cv2.pointPolygonTest(outerBoxContour,ip.MidPoint(ptsFound[0,0:2],ptsFound[3,0:2]),False)==-1):
-            ptsImage[0,0]=ptsFound[0,0]
-            ptsImage[0,1]=ptsFound[0,1]
-            ptsImage[1,0]=ptsFound[1,0]
-            ptsImage[1,1]=ptsFound[1,1]
+    if outerBoxContour.size!=0:
+        cv2.drawContours(frameForDrawing,[outerBoxContour],0,(0,255,0),2)
+        ptsC12 = FindContoursInside(c12CircleMask,outerBoxContour,boxArea*0.005,boxArea*0.25,(255,0,0),frameForDrawing)    
+        ptsC34 = FindContoursInside(c34CircleMask,outerBoxContour,boxArea*0.005,boxArea*0.25,(0,0,255),frameForDrawing)    
+        ptsFound = np.concatenate((ptsC12, ptsC34), axis=0) 
+        ptsCard = np.float32([[dictSet['cl1 xy'][0],dictSet['cl1 xy'][1]],[dictSet['cl2 xy'][0],dictSet['cl2 xy'][1]],[dictSet['cl3 xy'][0],dictSet['cl3 xy'][1]],[dictSet['cl4 xy'][0],dictSet['cl4 xy'][1]]])
+        ptsImage = np.float32([[135,220],[765,220],[135,1095],[765,1095]]) 
+        if ptsFound.shape[0]==4:
+            if (cv2.pointPolygonTest(outerBoxContour,ip.MidPoint(ptsFound[0,0:2],ptsFound[2,0:2]),False)==-1) & (cv2.pointPolygonTest(outerBoxContour,ip.MidPoint(ptsFound[0,0:2],ptsFound[3,0:2]),False)==-1):
+                ptsImage[0,0]=ptsFound[0,0]
+                ptsImage[0,1]=ptsFound[0,1]
+                ptsImage[1,0]=ptsFound[1,0]
+                ptsImage[1,1]=ptsFound[1,1]
+            else:
+                ptsImage[1,0]=ptsFound[0,0]
+                ptsImage[1,1]=ptsFound[0,1]
+                ptsImage[0,0]=ptsFound[1,0]
+                ptsImage[0,1]=ptsFound[1,1]
+            if (cv2.pointPolygonTest(outerBoxContour,ip.MidPoint(ptsImage[1,0:2],ptsFound[2,0:2]),False)==-1):
+                ptsImage[2,0]=ptsFound[2,0]
+                ptsImage[2,1]=ptsFound[2,1]
+                ptsImage[3,0]=ptsFound[3,0]
+                ptsImage[3,1]=ptsFound[3,1]
+            else:
+                ptsImage[3,0]=ptsFound[2,0]
+                ptsImage[3,1]=ptsFound[2,1]
+                ptsImage[2,0]=ptsFound[3,0]
+                ptsImage[2,1]=ptsFound[3,1]
+            Mrot = cv2.getPerspectiveTransform(ptsImage,ptsCard)
+            #the last tulpe below needs to be in settings
+            rotImage = cv2.warpPerspective(frame,Mrot,(2600,900))
+            return(rotImage,frameForDrawing)
         else:
-            ptsImage[1,0]=ptsFound[0,0]
-            ptsImage[1,1]=ptsFound[0,1]
-            ptsImage[0,0]=ptsFound[1,0]
-            ptsImage[0,1]=ptsFound[1,1]
-        if (cv2.pointPolygonTest(outerBoxContour,ip.MidPoint(ptsImage[1,0:2],ptsFound[2,0:2]),False)==-1):
-            ptsImage[2,0]=ptsFound[2,0]
-            ptsImage[2,1]=ptsFound[2,1]
-            ptsImage[3,0]=ptsFound[3,0]
-            ptsImage[3,1]=ptsFound[3,1]
-        else:
-            ptsImage[3,0]=ptsFound[2,0]
-            ptsImage[3,1]=ptsFound[2,1]
-            ptsImage[2,0]=ptsFound[3,0]
-            ptsImage[2,1]=ptsFound[3,1]
-        Mrot = cv2.getPerspectiveTransform(ptsImage,ptsCard)
-        #the last tulpe below needs to be in settings
-        rotImage = cv2.warpPerspective(frame,Mrot,(2600,900))
-        return(rotImage,frameForDrawing)
+            return(np.array([0]),frameForDrawing)
     else:
         return(np.array([0]),frameForDrawing)
 
