@@ -390,7 +390,7 @@ def RegisterImageColorCard(frame,frameForDrawing,dictSet):
                 ptsImage[2,1]=ptsFound[3,1]
             Mrot = cv2.getPerspectiveTransform(ptsImage,ptsCard)
             #the last tulpe below needs to be in settings
-            rotImage = cv2.warpPerspective(frame,Mrot,(2600,900))
+            rotImage = cv2.warpPerspective(frame,Mrot,(dictSet['box wh'][0],dictSet['box wh'][1]))
             return(rotImage,frameForDrawing)
         else:
             return(np.array([0]),frameForDrawing)
@@ -861,7 +861,7 @@ def WriteMultiFrameDataToExcel(parameterStats,roiList,outExcelFileName):
         worksheetData.write_column('I3', parameterStats[16,0,dfCollected,roiNumber])
         worksheetData.write_column('J3', parameterStats[17,0,dfCollected,roiNumber])
     #workbook.close()
-    writer.save()
+    writer.close()
 
 def WriteSingleFrameDataToExcel(frameStats,roiList,outExcelFileName):
     dfMean=pd.DataFrame(data=frameStats[0:12,0,0:len(roiList)].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"])
