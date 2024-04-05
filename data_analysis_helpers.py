@@ -6,6 +6,7 @@ Created on Fri Apr  3 16:10:14 2020
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 #font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -272,3 +273,179 @@ def AnnotateFit(fit,axisHandle,annotationText='Eq',color='black',arrow=False,xAr
                 )
     annotationObject.draggable()
     return annotationObject
+
+def ProcessI2(parameterStats,dictSet,frameNumber,file_path):
+    labels=["R","G","B","H","S","V","L","a","b","Ra","Ga","Ba","Ga-Ra","Ba-Ra","Ga-Ba"]
+    dfMean=pd.DataFrame(data=parameterStats[0:12,0,0:frameNumber,1].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,0:frameNumber,1])
+    dfStdev=pd.DataFrame(data=parameterStats[0:12,1,0:frameNumber,1].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,0:frameNumber,1])
+    dfMost=pd.DataFrame(data=parameterStats[0:12,2,0:frameNumber,1].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,0:frameNumber,1])
+
+    writer = pd.ExcelWriter(file_path, engine='xlsxwriter')
+    workbook  = writer.book
+    minArea=2
+    #maxArea=50000
+    maxSignal_1=65
+    minSignal_1=25
+    maxSignal_2=30
+    minSignal_2=6
+    dfMinArea=parameterStats[15,0,0:frameNumber,1]>minArea
+    #dfHeightRange=(parameterStats[16,0,0:frameNumber,1]>np.mean(parameterStats[16,0,0:frameNumber,1][dfMinArea])*0.95) & (parameterStats[16,0,0:frameNumber,1]<np.mean(parameterStats[16,0,0:frameNumber,1][dfMinArea])*1.05)
+    #dfBool=dfMinArea & dfHeightRange
+    dfBool_1=(dfMinArea) & (parameterStats[dictSet['ya1 ch'][0],0,0:frameNumber,1]<=maxSignal_1) & (parameterStats[dictSet['ya1 ch'][0],0,0:frameNumber,1]>=minSignal_1)
+    dfBool_2=(dfMinArea) & (parameterStats[dictSet['ya2 ch'][0],0,0:frameNumber,1]<=maxSignal_2) & (parameterStats[dictSet['ya2 ch'][0],0,0:frameNumber,1]>=minSignal_2)
+
+    worksheetFit = workbook.add_worksheet("Fit")
+    worksheetFit.write('A1', 'Time')
+    worksheetFit.write('B1', labels[dictSet['ya1 ch'][0]])
+    worksheetFit.write('C1', 'Time (linear range B-R)')
+    worksheetFit.write('D1', labels[dictSet['ya1 ch'][0]]+' (linear range B-R)')
+    worksheetFit.write('E1', 'Time')
+    worksheetFit.write('F1', labels[dictSet['ya2 ch'][0]]+' (linear range)')
+    worksheetFit.write('G1', 'Time (linear range G-R)')
+    worksheetFit.write('H1', labels[dictSet['ya2 ch'][0]]+' (linear range G-R)')
+    worksheetFit.write_column('A2',parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1])
+    worksheetFit.write_column('B2',parameterStats[dictSet['ya1 ch'][0],0,0:frameNumber,1])
+    worksheetFit.write_column('C2',parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1][dfBool_1])
+    worksheetFit.write_column('D2',parameterStats[dictSet['ya1 ch'][0],0,0:frameNumber,1][dfBool_1])
+    numEntries_1=parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1][dfBool_1].size
+    worksheetFit.write_column('E2',parameterStats[dictSet['xa2 ch'][0],0,0:frameNumber,1])
+    worksheetFit.write_column('F2',parameterStats[dictSet['ya2 ch'][0],0,0:frameNumber,1])
+    worksheetFit.write_column('G2',parameterStats[dictSet['xa2 ch'][0],0,0:frameNumber,1][dfBool_2])
+    worksheetFit.write_column('H2',parameterStats[dictSet['ya2 ch'][0],0,0:frameNumber,1][dfBool_2])
+    numEntries_2=parameterStats[dictSet['xa2 ch'][0],0,0:frameNumber,1][dfBool_2].size
+    numIndex_1=str(numEntries_1+1)
+    numIndex_2=str(numEntries_2+1)
+    worksheetFit.write_array_formula('J3:K5', '{=LINEST(D2:D'+numIndex_1+',C2:C'+numIndex_1+',TRUE,TRUE)}')
+    worksheetFit.write('J2', 'Slope')
+    worksheetFit.write('K2', 'Intercept')
+    worksheetFit.write('I3', 'coefs')
+    worksheetFit.write('I4', 'errors')
+    worksheetFit.write('I5', 'r2, sy')
+
+    worksheetFit.write_array_formula('L3:M5', '{=LINEST(H2:H'+numIndex_2+',G2:G'+numIndex_2+',TRUE,TRUE)}')
+    worksheetFit.write('L2', 'Slope')
+    worksheetFit.write('M2', 'Intercept')
+    
+    chart1 = workbook.add_chart({'type': 'scatter'})
+    numAllEntries=parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1].size
+    chart1.add_series({
+        'name': labels[dictSet['ya1 ch'][0]]+' linear',
+        'categories': ["Fit", 1, 2, 1+numEntries_1-1, 2],
+        'values': ["Fit", 1, 3, 1+numEntries_1-1, 3],
+        'trendline': {
+            'type': 'linear',
+            'display_equation': True,
+            'line': {
+            'color': 'black',
+            'width': 2,
+            },
+            'forward': parameterStats[dictSet['xa1 ch'][0],0,frameNumber-1,1],
+            'backward': parameterStats[dictSet['xa1 ch'][0],0,0,1],
+        },
+        'marker': {
+            'type': 'circle',
+            'size': 8,
+            'fill':   {'color': '#a66fb5'},
+        },
+    })
+    chart1.add_series({
+        'name': labels[dictSet['ya1 ch'][0]]+' all',
+        'categories': ["Fit", 1, 0, 1+numAllEntries-1, 0],
+        'values': ["Fit", 1, 1, 1+numAllEntries-1, 1],
+        'marker': {
+                'type': 'circle',
+                'size': 4,
+                'fill':   {'color': '#490648'},
+        },
+    })
+
+    #chart1.set_title ({'name': labels[dictSet['ya1 ch'][0]]+' Change'})
+    if (parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1].size!=0) and (parameterStats[dictSet['ya1 ch'][0],0,0:frameNumber,1].size!=0):
+        chart1.set_x_axis({
+                'name': 'Time (seconds)',
+                'min': np.min(np.floor(parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1])),
+                'max': np.max(np.ceil(parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1]))
+                })
+        chart1.set_y_axis({
+                'name': 'Signal',
+                'min': np.min(np.floor(parameterStats[dictSet['ya1 ch'][0],0,0:frameNumber,1])),
+                'max': np.max(np.ceil(parameterStats[dictSet['ya1 ch'][0],0,0:frameNumber,1])),
+                'major_gridlines': {
+                        'visible': False,
+                        },
+                })
+        #chart1.set_style(6)
+        chart1.set_legend({'position': 'none'})
+        worksheetFit.insert_chart('I8', chart1, {'x_offset': 25, 'y_offset': 10})
+
+    chart2 = workbook.add_chart({'type': 'scatter'})
+    numAllEntries=parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1].size
+    chart2.add_series({
+        'name': labels[dictSet['ya2 ch'][0]]+' linear',
+        'categories': ["Fit", 1, 6, 1+numEntries_2-1, 6],
+        'values': ["Fit", 1, 7, 1+numEntries_2-1, 7],
+        'trendline': {
+            'type': 'linear',
+            'display_equation': True,
+            'line': {
+            'color': 'black',
+            'width': 2,
+            },
+            'forward': parameterStats[dictSet['xa2 ch'][0],0,frameNumber-1,1],
+            'backward': parameterStats[dictSet['xa2 ch'][0],0,0,1],
+        },
+        'marker': {
+            'type': 'circle',
+            'size': 8,
+            'fill':   {'color': '#a66fb5'},
+        },
+    })
+    chart2.add_series({
+        'name': labels[dictSet['ya2 ch'][0]]+' all',
+        'categories': ["Fit", 1, 4, 1+numAllEntries-1, 4],
+        'values': ["Fit", 1, 5, 1+numAllEntries-1, 5],
+        'marker': {
+                'type': 'circle',
+                'size': 4,
+                'fill':   {'color': '#490648'},
+        },
+    })
+
+    #chart1.set_title ({'name': labels[dictSet['ya1 ch'][0]]+' Change'})
+    if (parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1].size!=0) and (parameterStats[dictSet['ya2 ch'][0],0,0:frameNumber,1].size!=0):
+        chart2.set_x_axis({
+                'name': 'Time (seconds)',
+                'min': np.min(np.floor(parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1])),
+                'max': np.max(np.ceil(parameterStats[dictSet['xa1 ch'][0],0,0:frameNumber,1]))
+                })
+        chart2.set_y_axis({
+                'name': 'Signal',
+                'min': np.min(np.floor(parameterStats[dictSet['ya2 ch'][0],0,0:frameNumber,1])),
+                'max': np.max(np.ceil(parameterStats[dictSet['ya2 ch'][0],0,0:frameNumber,1])),
+                'major_gridlines': {
+                        'visible': False,
+                        },
+                })
+        #chart1.set_style(6)
+        chart2.set_legend({'position': 'none'})
+        worksheetFit.insert_chart('I24', chart2, {'x_offset': 25, 'y_offset': 10})
+    
+    dfMean.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=6,index=False)
+    dfStdev.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=19,index=False)
+    dfMost.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=32,index=False)
+    worksheetData = writer.sheets['FrameData']
+    worksheetData.write('G1', 'Means')
+    worksheetData.write('T1', 'Standard Deviations')
+    worksheetData.write('AG1', 'Most Frequent Values')
+    worksheetData.write('A2', 'Time')
+    worksheetData.write('B2', 'FrameNumber')
+    worksheetData.write('C2', 'RO1Area')
+    worksheetData.write('D2', 'Height')
+    worksheetData.write('E2', 'Width')
+    worksheetData.write_column('A3', parameterStats[31,0,0:frameNumber,1])
+    worksheetData.write_column('B3', parameterStats[30,0,0:frameNumber,1])
+    worksheetData.write_column('C3', parameterStats[15,0,0:frameNumber,1])
+    worksheetData.write_column('D3', parameterStats[16,0,0:frameNumber,1])
+    worksheetData.write_column('E3', parameterStats[17,0,0:frameNumber,1])
+    
+    workbook.close()

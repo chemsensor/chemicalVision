@@ -1173,12 +1173,22 @@ while frameNumber<=totalFrames:
         if (setting[0:2]=="WB") & (setting[4:6]=="wh"):
             if (dictSet[setting][0]!=0) & (dictSet[setting][1]!=0):
                 wbList.append(setting[0:3])
-                
+    sgList=[]
+    for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
+        if (setting[0:2]=="SG") & (setting[4:6]=="c1"):
+            if (dictSet[setting][0]!=0):
+                sgList.append(setting[0:3])
+                    
     if dictSet['flg pf'][0]!=0:
         frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList)
         parameterStats[0:16,:,frameIndex,0:frameStats.shape[2]]=frameStats
         parameterStats[16,0,frameIndex,:]=mass
-        parameterStats[20,0,frameIndex,0]=parameterStats[dictSet['SIG c1'][0],0,frameIndex,dictSet['SIG c1'][1]] * dictSet['SIG c1'][2] + parameterStats[dictSet['SIG c2'][0],0,frameIndex,dictSet['SIG c2'][1]] *dictSet['SIG c2'][2]
+        for signal,index in zip(sgList,range(len(sgList))):
+            setingIndexer1=dictSet['SG'+str(index+1)+' c1']
+            #setingIndexer1=dictSet['SIG c1']
+            setingIndexer2=dictSet['SG'+str(index+1)+' c2']
+            #setingIndexer2=dictSet['SIG c2']
+            parameterStats[20+index,0,frameIndex,0]= parameterStats[setingIndexer1[0],0,frameIndex,setingIndexer1[1]] * setingIndexer1[2] + parameterStats[setingIndexer2[0],0,frameIndex,setingIndexer2[1]] * setingIndexer2[2]
         if liveFlag:
             parameterStats[28,0,frameIndex,:]=time.time()
         elif videoFlag:
@@ -1380,6 +1390,14 @@ if frameIndex>0:
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
         #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
         WriteMultiFrameDataToExcel(parameterStats[:,:,0:frameIndex,:],roiList,data_file_path)
+        
+if frameIndex>0:
+    saveSettings = input("Process and save summary (Y/n)?")
+    if (saveSettings=="Y") | (saveSettings=="y"):
+        root = tk.Tk()
+        root.withdraw()
+        data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
+        da.ProcessI2(parameterStats,dictSet,frameIndex,data_file_path)
 
 # dropSignal=parameterStats[dictSet['CNT yc'][0],dictSet['CNT yc'][1],0:frameIndex,dictSet['CNT yc'][2]]
 # boolDrop=da.hyst(dropSignal, dictSet['CNT hy'][0], dictSet['CNT hy'][1])
