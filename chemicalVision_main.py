@@ -1178,7 +1178,7 @@ while frameNumber<=totalFrames:
         frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList)
         parameterStats[0:16,:,frameIndex,0:frameStats.shape[2]]=frameStats
         parameterStats[16,0,frameIndex,:]=mass
-        parameterStats[20,0,frameIndex,0]=parameterStats[dictSet['SIG c1'][0],0,frameIndex,dictSet['SIG c1'][1]]*dictSet['SIG c1'][2]+parameterStats[dictSet['SIG c2'][0],0,frameIndex,dictSet['SIG c2'][1]]*dictSet['SIG c2'][2]
+        parameterStats[20,0,frameIndex,0]=parameterStats[dictSet['SIG c1'][0],0,frameIndex,dictSet['SIG c1'][1]] * dictSet['SIG c1'][2] + parameterStats[dictSet['SIG c2'][0],0,frameIndex,dictSet['SIG c2'][1]] *dictSet['SIG c2'][2]
         if liveFlag:
             parameterStats[28,0,frameIndex,:]=time.time()
         elif videoFlag:
