@@ -358,9 +358,8 @@ def RegisterImageColorCard(frame,frameForDrawing,dictSet):
     hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     boxMask = cv2.inRange(hsvFrame, np.array(dictSet['box ll']), np.array(dictSet['box ul'])) 
     c12CircleMask = cv2.inRange(hsvFrame, np.array(dictSet['c12 ll']), np.array(dictSet['c12 ul'])) 
-    c34CircleMask = cv2.inRange(hsvFrame, np.array(dictSet['c34 ll']), np.array(dictSet['c34 ul']))
+    c34CircleMask = cv2.inRange(hsvFrame, np.array(dictSet['c34 ll']), np.array(dictSet['c34 ul'])) 
     outerBoxContour,boxArea,boxBoundingRectangle=FindLargestContour(boxMask)
-
     if outerBoxContour.size!=0:
         cv2.drawContours(frameForDrawing,[outerBoxContour],0,(0,255,0),2)
         ptsC12 = FindContoursInside(c12CircleMask,outerBoxContour,boxArea*0.005,boxArea*0.25,(255,0,0),frameForDrawing)    
@@ -392,12 +391,6 @@ def RegisterImageColorCard(frame,frameForDrawing,dictSet):
             Mrot = cv2.getPerspectiveTransform(ptsImage,ptsCard)
             #the last tulpe below needs to be in settings
             rotImage = cv2.warpPerspective(frame,Mrot,(dictSet['box wh'][0],dictSet['box wh'][1]))
-
-            #trying to get average hue onto image
-            #resFrameBox = cv2.bitwise_and(hsvFrame,hsvFrame, mask= boxMask)
-            #hsvROIresFrameBox=cv2.meanStdDev(resFrameBox,mask=boxMask)
-            #ip.OpenCVPutText(frameForDrawing, 'h = '+'{0:.2f}'.format(hsvROIresFrameBox[0][0][0]), (ptsFound[3,0],ptsFound[3,1]), (255,255,0), fontScale = 0.3)
-
             return(rotImage,frameForDrawing)
         else:
             return(np.array([0]),frameForDrawing)
@@ -868,7 +861,7 @@ def WriteMultiFrameDataToExcel(parameterStats,roiList,outExcelFileName):
         worksheetData.write_column('I3', parameterStats[16,0,dfCollected,roiNumber])
         worksheetData.write_column('J3', parameterStats[17,0,dfCollected,roiNumber])
     #workbook.close()
-    writer.save()
+    writer.close()
 
 def WriteSingleFrameDataToExcel(frameStats,roiList,outExcelFileName):
     dfMean=pd.DataFrame(data=frameStats[0:12,0,0:len(roiList)].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"])
@@ -1185,7 +1178,7 @@ while frameNumber<=totalFrames:
         frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList)
         parameterStats[0:16,:,frameIndex,0:frameStats.shape[2]]=frameStats
         parameterStats[16,0,frameIndex,:]=mass
-        parameterStats[20,0,frameIndex,0]=parameterStats[dictSet['SIG c1'][0],0,frameIndex,dictSet['SIG c1'][1]]*dictSet['SIG c1'][2]+parameterStats[dictSet['SIG c2'][0],0,frameIndex,dictSet['SIG c2'][1]]*dictSet['SIG c2'][2]
+        parameterStats[20,0,frameIndex,0]=parameterStats[dictSet['SIG c1'][0],0,frameIndex,dictSet['SIG c1'][1]] * dictSet['SIG c1'][2] + parameterStats[dictSet['SIG c2'][0],0,frameIndex,dictSet['SIG c2'][1]] *dictSet['SIG c2'][2]
         if liveFlag:
             parameterStats[28,0,frameIndex,:]=time.time()
         elif videoFlag:
