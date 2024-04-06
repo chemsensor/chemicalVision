@@ -1397,7 +1397,7 @@ if frameIndex>0:
         root = tk.Tk()
         root.withdraw()
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
-        da.ProcessI2(parameterStats,dictSet,frameIndex,data_file_path)
+        da.ProcessI2(sgList,parameterStats,dictSet,frameIndex,data_file_path)
 
 # dropSignal=parameterStats[dictSet['CNT yc'][0],dictSet['CNT yc'][1],0:frameIndex,dictSet['CNT yc'][2]]
 # boolDrop=da.hyst(dropSignal, dictSet['CNT hy'][0], dictSet['CNT hy'][1])
