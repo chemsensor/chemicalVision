@@ -246,7 +246,7 @@ def AnnotateFit(fit,axisHandle,annotationText='Eq',color='black',arrow=False,xAr
         annotationText="Fit Details:\n"
         for order in range(t):
             exponent=t-order-1
-            annotationText=annotationText+"C$_{x^{"+str(exponent)+"}}$ = "+FormatSciUsingError(c[order],e[order],extraDigit=1)+' $\pm$ '+"{0:.1E}".format(e[order])+'\n'
+#            annotationText=annotationText+"C$_{x^{"+str(exponent)+"}}$ = "+FormatSciUsingError(c[order],e[order],extraDigit=1)+' $ \pm $ '+"{0:.1E}".format(e[order])+'\n'
         annotationText=annotationText+'n = {0:d}'.format(fit['n'])+', DoF = {0:d}'.format(fit['n']-t)+", s$_y$ = {0:.1E}".format(fit['sy'])
     if (arrow==True):
         if (xArrow==0):
