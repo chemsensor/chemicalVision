@@ -287,9 +287,7 @@ def ProcessI2(sgList,parameterStats,dictSet,frameNumber,file_path):
         minSignal=dictSet[signal+' lm'][0]
         maxSignal=dictSet[signal+' lm'][1]
         minArea=dictSet[signal+' lm'][2]
-        #dfMinArea=parameterStats[15,0,0:frameNumber,0]>minArea
-        dfMinArea=parameterStats[15,0,0:frameNumber,0]>-1
-        
+        dfMinArea=parameterStats[15,0,0:frameNumber,0]>minArea
         dfBool=(dfMinArea) & (parameterStats[20+index,0,0:frameNumber,0]<=maxSignal) & (parameterStats[20+index,0,0:frameNumber,0]>=minSignal)
         worksheetFit = workbook.add_worksheet(signal+"_Fit")
         worksheetFit.write('A1', 'Time')
