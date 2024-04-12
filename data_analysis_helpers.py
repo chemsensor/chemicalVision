@@ -287,18 +287,20 @@ def ProcessI2(sgList,parameterStats,dictSet,frameNumber,file_path):
         minSignal=dictSet[signal+' lm'][0]
         maxSignal=dictSet[signal+' lm'][1]
         minArea=dictSet[signal+' lm'][2]
-        dfMinArea=parameterStats[15,0,0:frameNumber,1]>minArea
-        dfBool=(dfMinArea) & (parameterStats[20+index,0,0:frameNumber,1]<=maxSignal) & (parameterStats[20+index,0,0:frameNumber,1]>=minSignal)
+        #dfMinArea=parameterStats[15,0,0:frameNumber,0]>minArea
+        dfMinArea=parameterStats[15,0,0:frameNumber,0]>-1
+        
+        dfBool=(dfMinArea) & (parameterStats[20+index,0,0:frameNumber,0]<=maxSignal) & (parameterStats[20+index,0,0:frameNumber,0]>=minSignal)
         worksheetFit = workbook.add_worksheet(signal+"_Fit")
         worksheetFit.write('A1', 'Time')
         worksheetFit.write('B1', labels[dictSet[signal+" c1"][0]]+","+labels[dictSet[signal+" c2"][0]])
         worksheetFit.write('C1', 'Time (linear range B-R)')
         worksheetFit.write('D1', labels[dictSet[signal+" c1"][0]]+","+labels[dictSet[signal+" c2"][0]] + ' range ' +str(dictSet[signal+" lm"][0])+" to "+str(dictSet[signal+" lm"][1]))
-        worksheetFit.write_column('A2',parameterStats[30,0,0:frameNumber,1])
-        worksheetFit.write_column('B2',parameterStats[20+index,0,0:frameNumber,1])
-        worksheetFit.write_column('C2',parameterStats[30,0,0:frameNumber,1][dfBool])
-        worksheetFit.write_column('D2',parameterStats[20+index,0,0:frameNumber,1][dfBool])
-        numEntries=parameterStats[20+index,0,0:frameNumber,1][dfBool].size
+        worksheetFit.write_column('A2',parameterStats[30,0,0:frameNumber,0])
+        worksheetFit.write_column('B2',parameterStats[20+index,0,0:frameNumber,0])
+        worksheetFit.write_column('C2',parameterStats[30,0,0:frameNumber,0][dfBool])
+        worksheetFit.write_column('D2',parameterStats[20+index,0,0:frameNumber,0][dfBool])
+        numEntries=parameterStats[20+index,0,0:frameNumber,0][dfBool].size
         numIndex=str(numEntries+1)
         worksheetFit.write_array_formula('J3:K5', '{=LINEST(D2:D'+numIndex+',C2:C'+numIndex+',TRUE,TRUE)}')
         worksheetFit.write('J2', 'Slope')
@@ -308,7 +310,7 @@ def ProcessI2(sgList,parameterStats,dictSet,frameNumber,file_path):
         worksheetFit.write('I5', 'r2, sy')
         
         chart1 = workbook.add_chart({'type': 'scatter'})
-        numAllEntries=parameterStats[20+index,0,0:frameNumber,1].size
+        numAllEntries=parameterStats[20+index,0,0:frameNumber,0].size
         chart1.add_series({
             'name': labels[dictSet[signal+" c1"][0]]+","+labels[dictSet[signal+" c2"][0]]+' linear',
             'categories': [signal+"_Fit", 1, 2, 1+numEntries-1, 2],
@@ -320,8 +322,8 @@ def ProcessI2(sgList,parameterStats,dictSet,frameNumber,file_path):
                 'color': 'black',
                 'width': 2,
                 },
-                'forward': parameterStats[20+index,0,frameNumber-1,1],
-                'backward': parameterStats[20+index,0,0,1],
+                'forward': parameterStats[20+index,0,frameNumber-1,0],
+                'backward': parameterStats[20+index,0,0,0],
             },
             'marker': {
                 'type': 'circle',
@@ -341,16 +343,16 @@ def ProcessI2(sgList,parameterStats,dictSet,frameNumber,file_path):
         })
     
         #chart1.set_title ({'name': labels[dictSet['ya1 ch'][0]]+' Change'})
-        if (parameterStats[30,0,0:frameNumber,1].size!=0) and (parameterStats[20+index,0,0:frameNumber,1].size!=0):
+        if (parameterStats[30,0,0:frameNumber,0].size!=0) and (parameterStats[20+index,0,0:frameNumber,0].size!=0):
             chart1.set_x_axis({
                     'name': 'Time (seconds)',
-                    'min': np.min(np.floor(parameterStats[30,0,0:frameNumber,1])),
-                    'max': np.max(np.ceil(parameterStats[30,0,0:frameNumber,1]))
+                    'min': np.min(np.floor(parameterStats[30,0,0:frameNumber,0])),
+                    'max': np.max(np.ceil(parameterStats[30,0,0:frameNumber,0]))
                     })
             chart1.set_y_axis({
                     'name': 'Signal',
-                    'min': np.min(np.floor(parameterStats[20+index,0,0:frameNumber,1])),
-                    'max': np.max(np.ceil(parameterStats[20+index,0,0:frameNumber,1])),
+                    'min': np.min(np.floor(parameterStats[20+index,0,0:frameNumber,0])),
+                    'max': np.max(np.ceil(parameterStats[20+index,0,0:frameNumber,0])),
                     'major_gridlines': {
                             'visible': False,
                             },
