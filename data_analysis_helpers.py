@@ -6,6 +6,7 @@ Created on Fri Apr  3 16:10:14 2020
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 #font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -245,7 +246,7 @@ def AnnotateFit(fit,axisHandle,annotationText='Eq',color='black',arrow=False,xAr
         annotationText="Fit Details:\n"
         for order in range(t):
             exponent=t-order-1
-            annotationText=annotationText+"C$_{x^{"+str(exponent)+"}}$ = "+FormatSciUsingError(c[order],e[order],extraDigit=1)+' $\pm$ '+"{0:.1E}".format(e[order])+'\n'
+#            annotationText=annotationText+"C$_{x^{"+str(exponent)+"}}$ = "+FormatSciUsingError(c[order],e[order],extraDigit=1)+' $ \pm $ '+"{0:.1E}".format(e[order])+'\n'
         annotationText=annotationText+'n = {0:d}'.format(fit['n'])+', DoF = {0:d}'.format(fit['n']-t)+", s$_y$ = {0:.1E}".format(fit['sy'])
     if (arrow==True):
         if (xArrow==0):
@@ -272,3 +273,89 @@ def AnnotateFit(fit,axisHandle,annotationText='Eq',color='black',arrow=False,xAr
                 )
     annotationObject.draggable()
     return annotationObject
+
+def ProcessI2(sgList,parameterStats,dictSet,frameNumber,file_path):
+    labels=["R","G","B","H","S","V","L","a","b","Ra","Ga","Ba","Ga-Ra","Ba-Ra","Ga-Ba"]
+    #dfMean=pd.DataFrame(data=parameterStats[0:12,0,0:frameNumber,1].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,0:frameNumber,1])
+    #dfStdev=pd.DataFrame(data=parameterStats[0:12,1,0:frameNumber,1].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,0:frameNumber,1])
+    #dfMost=pd.DataFrame(data=parameterStats[0:12,2,0:frameNumber,1].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,0:frameNumber,1])
+
+    writer = pd.ExcelWriter(file_path, engine='xlsxwriter')
+    workbook  = writer.book
+    
+    for signal,index in zip(sgList,range(len(sgList))):
+        minSignal=dictSet[signal+' lm'][0]
+        maxSignal=dictSet[signal+' lm'][1]
+        minArea=dictSet[signal+' lm'][2]
+        dfMinArea=parameterStats[15,0,0:frameNumber,0]>minArea
+        dfBool=(dfMinArea) & (parameterStats[20+index,0,0:frameNumber,0]<=maxSignal) & (parameterStats[20+index,0,0:frameNumber,0]>=minSignal)
+        worksheetFit = workbook.add_worksheet(signal+"_Fit")
+        worksheetFit.write('A1', 'Time')
+        worksheetFit.write('B1', labels[dictSet[signal+" c1"][0]]+","+labels[dictSet[signal+" c2"][0]])
+        worksheetFit.write('C1', 'Time (linear range B-R)')
+        worksheetFit.write('D1', labels[dictSet[signal+" c1"][0]]+","+labels[dictSet[signal+" c2"][0]] + ' range ' +str(dictSet[signal+" lm"][0])+" to "+str(dictSet[signal+" lm"][1]))
+        worksheetFit.write_column('A2',parameterStats[30,0,0:frameNumber,0])
+        worksheetFit.write_column('B2',parameterStats[20+index,0,0:frameNumber,0])
+        worksheetFit.write_column('C2',parameterStats[30,0,0:frameNumber,0][dfBool])
+        worksheetFit.write_column('D2',parameterStats[20+index,0,0:frameNumber,0][dfBool])
+        numEntries=parameterStats[20+index,0,0:frameNumber,0][dfBool].size
+        numIndex=str(numEntries+1)
+        worksheetFit.write_array_formula('J3:K5', '{=LINEST(D2:D'+numIndex+',C2:C'+numIndex+',TRUE,TRUE)}')
+        worksheetFit.write('J2', 'Slope')
+        worksheetFit.write('K2', 'Intercept')
+        worksheetFit.write('I3', 'coefs')
+        worksheetFit.write('I4', 'errors')
+        worksheetFit.write('I5', 'r2, sy')
+        
+        chart1 = workbook.add_chart({'type': 'scatter'})
+        numAllEntries=parameterStats[20+index,0,0:frameNumber,0].size
+        chart1.add_series({
+            'name': labels[dictSet[signal+" c1"][0]]+","+labels[dictSet[signal+" c2"][0]]+' linear',
+            'categories': [signal+"_Fit", 1, 2, 1+numEntries-1, 2],
+            'values': [signal+"_Fit", 1, 3, 1+numEntries-1, 3],
+            'trendline': {
+                'type': 'linear',
+                'display_equation': True,
+                'line': {
+                'color': 'black',
+                'width': 2,
+                },
+                'forward': parameterStats[20+index,0,frameNumber-1,0],
+                'backward': parameterStats[20+index,0,0,0],
+            },
+            'marker': {
+                'type': 'circle',
+                'size': 8,
+                'fill':   {'color': '#a66fb5'},
+            },
+        })
+        chart1.add_series({
+            'name': labels[dictSet[signal+" c1"][0]]+","+labels[dictSet[signal+" c2"][0]]+' all',
+            'categories': [signal+"_Fit", 1, 0, 1+numAllEntries-1, 0],
+            'values': [signal+"_Fit", 1, 1, 1+numAllEntries-1, 1],
+            'marker': {
+                    'type': 'circle',
+                    'size': 4,
+                    'fill':   {'color': '#490648'},
+            },
+        })
+    
+        #chart1.set_title ({'name': labels[dictSet['ya1 ch'][0]]+' Change'})
+        if (parameterStats[30,0,0:frameNumber,0].size!=0) and (parameterStats[20+index,0,0:frameNumber,0].size!=0):
+            chart1.set_x_axis({
+                    'name': 'Time (seconds)',
+                    'min': np.min(np.floor(parameterStats[30,0,0:frameNumber,0])),
+                    'max': np.max(np.ceil(parameterStats[30,0,0:frameNumber,0]))
+                    })
+            chart1.set_y_axis({
+                    'name': 'Signal',
+                    'min': np.min(np.floor(parameterStats[20+index,0,0:frameNumber,0])),
+                    'max': np.max(np.ceil(parameterStats[20+index,0,0:frameNumber,0])),
+                    'major_gridlines': {
+                            'visible': False,
+                            },
+                    })
+            #chart1.set_style(6)
+            chart1.set_legend({'position': 'none'})
+            worksheetFit.insert_chart('I8', chart1, {'x_offset': 25, 'y_offset': 10})  
+    workbook.close()
