@@ -19,6 +19,7 @@ circlePad=np.uint(borderMargin/2)
 numberSwatches=6
 refSwatchSpacing=np.uint((paperHeight-borderMargin)/numberSwatches)
 refSwatchDimension=np.uint((paperHeight-borderMargin)/(numberSwatches*1.5))
+swatchMargin=np.uint(borderMargin/10)
 ReferenceImage = np.full((paperHeight,paperWidth, 3), 255,np.uint8)
 
 #cyan border
@@ -29,13 +30,16 @@ cv2.rectangle(ReferenceImage, (paperWidth-borderMargin,0), (paperWidth,paperHeig
 #yellowCircles on the left
 cv2.circle(ReferenceImage,(circlePad,circlePad), circler, (0,255,255), -1) 
 cv2.circle(ReferenceImage,(circlePad,paperHeight-circlePad), circler, (0,255,255), -1) 
-
-#magentaCircles of left card
+#magentaCircles on the right
 cv2.circle(ReferenceImage,(paperWidth-circlePad,circlePad), circler, (255,0,255), -1) 
 cv2.circle(ReferenceImage,(paperWidth-circlePad,paperHeight-circlePad), circler, (255,0,255), -1) 
+circleText="Yellow: ("+str(circlePad)+","+str(circlePad)+")&("+str(circlePad)+","+str(paperHeight-circlePad)+")"
+circleText=circleText+" ; Magenta: ("+str(paperWidth-circlePad)+","+str(circlePad)+")&("+str(paperWidth-circlePad)+","+str(paperHeight-circlePad)+")"
+cv2.putText(ReferenceImage, circleText, (borderMargin+swatchMargin,paperHeight-borderMargin-swatchMargin), font, 1,(0,0,0),1,cv2.LINE_AA)
+
 
 colorsRightSwatchs=[[0,0,255],[0,255,255],[0,255,0],[255,255,0],[255,0,0],[255,0,255]]
-swatchMargin=np.uint(borderMargin/10)
+
 for swatchNum in range(numberSwatches):
     r=(255/numberSwatches*(swatchNum+1))
     g=r

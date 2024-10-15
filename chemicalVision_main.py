@@ -1099,7 +1099,7 @@ while frameNumber<=totalFrames:
             frameAcc=np.zeros((frame.shape), np.uint32)
             frameAcc=frameAcc+frame
             for frameNumber in range(dictSet['frm av'][0]-1):
-                ret, frame = cap.read() 
+                ret, yframe = cap.read() 
                 frameAcc=frameAcc+frame
             frame=(frameAcc/dictSet['frm av'][0]).astype(np.uint8)
         else:
