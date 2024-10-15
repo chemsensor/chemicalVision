@@ -58,7 +58,6 @@ if versionPython==2:
     from tkFileDialog import askopenfilename
     from tkFileDialog import asksaveasfilename
     input=raw_input
-
 else:
     import tkinter as tk
     from tkinter.filedialog import askopenfilename
