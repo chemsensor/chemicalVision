@@ -429,6 +429,20 @@ def WhiteBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,wbList
         frame=ip.OpenCVRebalanceImage(frame,rfactor,gfactor,bfactor)
     return(rgbWBR,rotImage,frame,frameForDrawing)
 
+def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refList=['RF1']):
+    rgbCLR=np.zeros((rotImage.shape),dtype='uint8')
+    for refRegion in refList:
+        rgbCLR[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]] = rotImage[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]]
+        cv2.rectangle(frameForDrawing,(dictSet[refRegion+' xy'][0],dictSet[refRegion+' xy'][1]),(dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0],dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1]),(255,0,0),10 )
+        if dictSet[refRegion+' hs'][2]!=0:
+            valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,refRegion,dictSet,connectedOnly=False,histogramHeight=dictSet['dsp wh'][1])
+            displayFrame=OpenCVComposite(histogramImage, displayFrame, dictSet[refRegion+' hs'])
+        else:
+            valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,refRegion,dictSet,connectedOnly=False)                
+        if dictSet[refRegion+' ds'][2]!=0:
+            displayFrame=OpenCVComposite(resRGB, displayFrame, dictSet[refRegion+' ds'])
+    return(rgbCLR,rotImage,frame,frameForDrawing)
+
 def OpenCVComposite(sourceImage, targetImage,settingsWHS):
     if (sourceImage.size==0) or (sourceImage.shape[1]==0) or (sourceImage.shape[0]==0):
         return targetImage
@@ -568,7 +582,7 @@ def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=
     else:
         return(allROIsummary[0,:,0],allROIsummary[1,:,0],resMask,resFrameROI,contourArea,boundingRectangle,False)
         
-def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"]):
+def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],refList=["RF1"]):
     frameForDrawing=np.copy(frame)
     frameStats=np.zeros((16,6,len(roiList)))    
     if dictSet['flg rf'][0]==1:
@@ -601,6 +615,10 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"]):
             #maskWBR = cv2.inRange(hsvWBR, np.array(dictSet['WBR ll']), np.array(dictSet['WBR ul']))
             #rgbWBRsummary=cv2.meanStdDev(rgbWBR,mask=maskWBR)
             #resFrameWBR = cv2.bitwise_and(rgbWBR,rgbWBR, mask= maskWBR)
+        if dictSet['flg wb'][1]==1:
+            rgbCLR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
+            if dictSet['flg di'][0]==1:
+                cv2.imshow("CLR",rgbCLR)
         if dictSet['flg di'][0]==1:
             cv2.imshow("RotatedImage",rotImage)
         for roiSetName,roiNumber in zip(roiList,range(len(roiList))):
@@ -1172,6 +1190,12 @@ while frameNumber<=totalFrames:
         if (setting[0:2]=="WB") & (setting[4:6]=="wh"):
             if (dictSet[setting][0]!=0) & (dictSet[setting][1]!=0):
                 wbList.append(setting[0:3])
+    refList=[]
+    for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
+        if (setting[0:2]=="RF") & (setting[4:6]=="wh"):
+            if (dictSet[setting][0]!=0) & (dictSet[setting][1]!=0):
+                refList.append(setting[0:3])
+                
     sgList=[]
     for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
         if (setting[0:2]=="SG") & (setting[4:6]=="c1"):
@@ -1179,7 +1203,7 @@ while frameNumber<=totalFrames:
                 sgList.append(setting[0:3])
                     
     if dictSet['flg pf'][0]!=0:
-        frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList)
+        frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
         parameterStats[0:16,:,frameIndex,0:frameStats.shape[2]]=frameStats
         parameterStats[16,0,frameIndex,:]=mass
         for signal,index in zip(sgList,range(len(sgList))):

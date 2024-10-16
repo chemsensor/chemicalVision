@@ -11,8 +11,8 @@ settingString='''
 #qrimg = qrcode.make(settingString)
 #open_qr_image = np.array(qrimg.convert('RGB'))
 #open_qr_image = cv2.resize(open_qr_image, (400, 400))
-paperWidth=1800
-paperHeight=1200
+paperWidth=1480
+paperHeight=1050
 borderMargin=200
 numberSwatches=6
 
@@ -42,9 +42,9 @@ cv2.circle(ReferenceImage,(circlePad,paperHeight-circlePad), circler, (0,255,255
 #magentaCircles on the right
 cv2.circle(ReferenceImage,(paperWidth-circlePad,circlePad), circler, (255,0,255), -1) 
 cv2.circle(ReferenceImage,(paperWidth-circlePad,paperHeight-circlePad), circler, (255,0,255), -1) 
-circleText="Y: ("+str(circlePad)+","+str(circlePad)+")&("+str(circlePad)+","+str(paperHeight-circlePad)+")"
-circleText=circleText+" ; M: ("+str(paperWidth-circlePad)+","+str(circlePad)+")&("+str(paperWidth-circlePad)+","+str(paperHeight-circlePad)+")"
-cv2.putText(ReferenceImage, circleText, (borderMargin+borderMargin,paperHeight-borderMargin-swatchMargin), font, 1,(0,0,0),1,cv2.LINE_AA)
+circleText="Y:("+str(circlePad)+","+str(circlePad)+")("+str(circlePad)+","+str(paperHeight-circlePad)+")"
+circleText=circleText+"; M:("+str(paperWidth-circlePad)+","+str(circlePad)+")("+str(paperWidth-circlePad)+","+str(paperHeight-circlePad)+")"
+cv2.putText(ReferenceImage, circleText, (circlePad*3+swatchMargin*2,paperHeight-borderMargin-swatchMargin), font, 1,(0,0,0),1,cv2.LINE_AA)
 
 
 colorsRightSwatchs=[[0,0,255],[0,255,255],[0,255,0],[255,255,0],[255,0,0],[255,0,255]]
