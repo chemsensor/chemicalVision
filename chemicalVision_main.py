@@ -402,10 +402,10 @@ def WhiteBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,wbList
         rgbWBR[dictSet[wbRegion+' xy'][1]:dictSet[wbRegion+' xy'][1]+dictSet[wbRegion+' wh'][1], dictSet[wbRegion+' xy'][0]:dictSet[wbRegion+' xy'][0]+dictSet[wbRegion+' wh'][0]] = rotImage[dictSet[wbRegion+' xy'][1]:dictSet[wbRegion+' xy'][1]+dictSet[wbRegion+' wh'][1], dictSet[wbRegion+' xy'][0]:dictSet[wbRegion+' xy'][0]+dictSet[wbRegion+' wh'][0]]
         cv2.rectangle(frameForDrawing,(dictSet[wbRegion+' xy'][0],dictSet[wbRegion+' xy'][1]),(dictSet[wbRegion+' xy'][0]+dictSet[wbRegion+' wh'][0],dictSet[wbRegion+' xy'][1]+dictSet[wbRegion+' wh'][1]),(0,0,255),10 )
         if dictSet[wbRegion+' hs'][2]!=0:
-            valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,wbRegion,dictSet,connectedOnly=False,histogramHeight=dictSet['dsp wh'][1])
+            valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,wbRegion,dictSet,connectedOnly=True,histogramHeight=dictSet['dsp wh'][1])
             displayFrame=OpenCVComposite(histogramImage, displayFrame, dictSet[wbRegion+' hs'])
         else:
-            valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,wbRegion,dictSet,connectedOnly=False)                
+            valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,wbRegion,dictSet,connectedOnly=True)                
         if dictSet[wbRegion+' ds'][2]!=0:
             displayFrame=OpenCVComposite(resRGB, displayFrame, dictSet[wbRegion+' ds'])
     hsvWBR = cv2.cvtColor(rgbWBR, cv2.COLOR_BGR2HSV)
