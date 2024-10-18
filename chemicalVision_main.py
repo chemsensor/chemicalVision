@@ -209,7 +209,7 @@ def FindContoursInside(mask,boundingContour,areaMin,areaMax,drawColor,frameForDr
                     ptsFound[circleIndex,3]=1
                     circleIndex=circleIndex+1
                     cv2.drawContours(frameForDrawing,[contour],0,drawColor,2)
-                    cv2.circle(frameForDrawing,(int(cx),int(cy)), 2, drawColor, -1)
+                    cv2.circle(frameForDrawing,(int(cx),int(cy)), 10, drawColor, -1)
     return(ptsFound[0:circleIndex,:])
 
 def RegisterImageColorRectangleFlex(frame,frameForDrawing,boxLL,boxUL,boxC1,boxC2,boxC3,boxC4,boxOR,boxWH,epsilonWeight=0.1):
@@ -361,8 +361,8 @@ def RegisterImageColorCard(frame,frameForDrawing,dictSet):
     outerBoxContour,boxArea,boxBoundingRectangle=FindLargestContour(boxMask)
     if outerBoxContour.size!=0:
         cv2.drawContours(frameForDrawing,[outerBoxContour],0,(0,255,0),2)
-        ptsC12 = FindContoursInside(c12CircleMask,outerBoxContour,boxArea*0.005,boxArea*0.25,(255,0,0),frameForDrawing)    
-        ptsC34 = FindContoursInside(c34CircleMask,outerBoxContour,boxArea*0.005,boxArea*0.25,(0,0,255),frameForDrawing)    
+        ptsC12 = FindContoursInside(c12CircleMask,outerBoxContour,boxArea*0.001,boxArea*0.25,(255,0,0),frameForDrawing)    
+        ptsC34 = FindContoursInside(c34CircleMask,outerBoxContour,boxArea*0.001,boxArea*0.25,(0,0,255),frameForDrawing)    
         ptsFound = np.concatenate((ptsC12, ptsC34), axis=0) 
         ptsCard = np.float32([[dictSet['cl1 xy'][0],dictSet['cl1 xy'][1]],[dictSet['cl2 xy'][0],dictSet['cl2 xy'][1]],[dictSet['cl3 xy'][0],dictSet['cl3 xy'][1]],[dictSet['cl4 xy'][0],dictSet['cl4 xy'][1]]])
         ptsImage = np.float32([[135,220],[765,220],[135,1095],[765,1095]]) 
@@ -601,7 +601,7 @@ def SummarizeFrame(frame,dictSet,histogramHeight=0):
     histogramFrame = np.zeros((histogramHeight, 255+20, 3), np.uint8)
     for row, displayColor, inputImage, resMask, channel, label in zip(rows, displayColors, inputImages, inputMasks, channels,labels):              
         mean,std,most=ip.OpenCVDisplayedHistogram(inputImage,channel,resMask,256,0,255,5,row*singleHeight+5,256,singleHeight-15,histogramFrame,displayColor,5,True,label,fontScale=0.38)
-    return(histogramFrame)
+    return(histogramFrame,boxMask,c12Mask,c34Mask)
        
 def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],refList=["RF1"]):
     frameForDrawing=np.copy(frame)
@@ -1174,8 +1174,13 @@ while frameNumber<=totalFrames:
         displayFrame=OpenCVComposite(frame, displayFrame,dictSet['PRE ds'])
 
     if dictSet['PRE hs'][2]!=0:
-        histogramImage=SummarizeFrame(frame,dictSet,histogramHeight=dictSet['dsp wh'][1])
+        histogramImage,boxMask,c12Mask,c34Mask=SummarizeFrame(frame,dictSet,histogramHeight=dictSet['dsp wh'][1])
         displayFrame=OpenCVComposite(histogramImage, displayFrame, dictSet['PRE hs'])
+        xCoord=int(dictSet['PRE hs'][0])+int(dictSet['PRE mk'][0])
+        yOff=dictSet['PRE mk'][1]
+        displayFrame=OpenCVComposite(boxMask, displayFrame, (xCoord,dictSet['PRE hs'][1],dictSet['PRE mk'][2]))
+        displayFrame=OpenCVComposite(c12Mask, displayFrame, (xCoord,dictSet['PRE hs'][1]+yOff,dictSet['PRE mk'][2]))
+        displayFrame=OpenCVComposite(c34Mask, displayFrame, (xCoord,dictSet['PRE hs'][1]+yOff+yOff,dictSet['PRE mk'][2]))
 
         
     # if (dictSet['CM2 ds'][2]!=0) & (dictSet['CM2 en'][0]!=-1) and (liveFlag):
