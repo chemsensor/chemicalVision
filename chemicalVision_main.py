@@ -581,7 +581,28 @@ def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=
         return(allROIsummary[0,:,0],allROIsummary[1,:,0],resMask,resFrameROI,contourArea,boundingRectangle,histogramFrame)
     else:
         return(allROIsummary[0,:,0],allROIsummary[1,:,0],resMask,resFrameROI,contourArea,boundingRectangle,False)
-        
+
+def SummarizeFrame(frame,dictSet,histogramHeight=0):
+    hsvROI = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    boxMask = cv2.inRange(hsvROI, np.array(dictSet['box ll']), np.array(dictSet['box ul']))
+    boxFrameROI = cv2.bitwise_and(hsvROI,hsvROI, mask= boxMask)
+    c12Mask = cv2.inRange(hsvROI, np.array(dictSet['c12 ll']), np.array(dictSet['c12 ul']))
+    c12FrameROI = cv2.bitwise_and(hsvROI,hsvROI, mask= c12Mask)
+    c34Mask = cv2.inRange(hsvROI, np.array(dictSet['c34 ll']), np.array(dictSet['c34 ul']))
+    c34FrameROI = cv2.bitwise_and(hsvROI,hsvROI, mask= c34Mask)
+    
+    inputImages= [boxFrameROI,boxFrameROI,boxFrameROI,c12FrameROI,c12FrameROI,c12FrameROI,c34FrameROI,c34FrameROI,c34FrameROI]
+    inputMasks= [boxMask,boxMask,boxMask,c12Mask,c12Mask,c12Mask,c34Mask,c34Mask,c34Mask]
+    rows=range(len(inputImages))
+    displayColors=[(255,255,0),(200,200,200),(128,128,128),(0,255,255),(200,200,200),(128,128,128),(255,0,255),(200,200,200),(128,128,128)]
+    channels=[0,1,2,0,1,2,0,1,2]
+    labels=["Hb","Sb","Vb","Hca","Sca","Vca","Hcb","Scb","Vcb"]
+    singleHeight=int((histogramHeight-10)/len(inputImages))
+    histogramFrame = np.zeros((histogramHeight, 255+20, 3), np.uint8)
+    for row, displayColor, inputImage, resMask, channel, label in zip(rows, displayColors, inputImages, inputMasks, channels,labels):              
+        mean,std,most=ip.OpenCVDisplayedHistogram(inputImage,channel,resMask,256,0,255,5,row*singleHeight+5,256,singleHeight-15,histogramFrame,displayColor,5,True,label,fontScale=0.38)
+    return(histogramFrame)
+       
 def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],refList=["RF1"]):
     frameForDrawing=np.copy(frame)
     frameStats=np.zeros((16,6,len(roiList)))    
@@ -1152,6 +1173,11 @@ while frameNumber<=totalFrames:
     if dictSet['PRE ds'][2]!=0:
         displayFrame=OpenCVComposite(frame, displayFrame,dictSet['PRE ds'])
 
+    if dictSet['PRE hs'][2]!=0:
+        histogramImage=SummarizeFrame(frame,dictSet,histogramHeight=dictSet['dsp wh'][1])
+        displayFrame=OpenCVComposite(histogramImage, displayFrame, dictSet['PRE hs'])
+
+        
     # if (dictSet['CM2 ds'][2]!=0) & (dictSet['CM2 en'][0]!=-1) and (liveFlag):
     #     frameCrop2=frame2[dictSet['CM2 xy'][0]:dictSet['CM2 xy'][0]+dictSet['CM2 wh'][0],dictSet['CM2 xy'][1]:dictSet['CM2 xy'][1]+dictSet['CM2 wh'][1],:]
     #     displayFrame=OpenCVComposite(frameCrop2, displayFrame,dictSet['CM2 ds'])
