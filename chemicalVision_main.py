@@ -931,7 +931,7 @@ def WriteSingleFrameDataToExcel(frameStats,roiList,outExcelFileName):
     worksheetData.write_column('G3', frameStats[15,0,0:len(roiList)])
     worksheetData.write_column('H3', frameStats[16,0,0:len(roiList)])
     workbook.close()
-    writer.save()
+    #writer.save()
 
 def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
     massFrame = cv2.GaussianBlur(massFrame,(5,5),0)
@@ -1433,8 +1433,10 @@ if grabCount!=0:
         root = tk.Tk()
         root.withdraw()
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_grabbedData' ,defaultextension='.xlsx')
-        #WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
-        WriteMultiFrameDataToExcel(grabbedStats[:,:,0:grabCount,:],0,data_file_path)
+        if grabCount==1:
+            WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
+        else:
+            WriteMultiFrameDataToExcel(grabbedStats[:,:,0:grabCount,:],0,data_file_path)
 
 if frameIndex>0:
     saveSettings = input("Save all frame values (Y/n)?")

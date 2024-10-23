@@ -13,12 +13,12 @@ settingString='''
 #open_qr_image = cv2.resize(open_qr_image, (400, 400))
 paperWidth=2000
 paperHeight=1500
-borderMargin=200
+borderMargin=np.uint(paperWidth/10)
 numberSwatches=6
 
 whiteBorder=np.uint(borderMargin/10)
 circler=np.uint(borderMargin/4)
-circlePad=np.uint(borderMargin/2)
+circlePad=np.uint(borderMargin/2+whiteBorder/2)
 refSwatchSpacing=np.uint((paperHeight-borderMargin)/numberSwatches)
 refSwatchDimension=np.uint((paperHeight-borderMargin)/(numberSwatches*1.5))
 swatchMargin=np.uint(borderMargin/10)
@@ -44,7 +44,7 @@ cv2.circle(ReferenceImage,(paperWidth-circlePad,circlePad), circler, (255,0,255)
 cv2.circle(ReferenceImage,(paperWidth-circlePad,paperHeight-circlePad), circler, (255,0,255), -1) 
 circleText="Y:("+str(circlePad)+","+str(circlePad)+")("+str(circlePad)+","+str(paperHeight-circlePad)+")"
 circleText=circleText+"; M:("+str(paperWidth-circlePad)+","+str(circlePad)+")("+str(paperWidth-circlePad)+","+str(paperHeight-circlePad)+")"
-cv2.putText(ReferenceImage, circleText, (circlePad*3+swatchMargin*2,paperHeight-borderMargin-swatchMargin), font, 1,(0,0,0),1,cv2.LINE_AA)
+cv2.putText(ReferenceImage, circleText, (borderMargin*3,paperHeight-borderMargin-swatchMargin), font, 1,(0,0,0),1,cv2.LINE_AA)
 
 
 colorsRightSwatchs=[[0,0,255],[0,255,255],[0,255,0],[255,255,0],[255,0,0],[255,0,255]]
@@ -63,5 +63,5 @@ for swatchNum in range(numberSwatches):
 #cv2.putText(ReferenceImage,"Iodination",(1100,380), font, 1,(0,0,0),1,cv2.LINE_AA)
 cv2.imshow('RefCard', ReferenceImage)
 keypress=cv2.waitKey(0) & 0xFF
-cv2.imwrite("ArchRefCard.jpg", ReferenceImage)
+cv2.imwrite("15by20RefCard.jpg", ReferenceImage)
 cv2.destroyAllWindows()
