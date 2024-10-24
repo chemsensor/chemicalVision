@@ -5,7 +5,7 @@ import cv2
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 settingString='''
-{'ROI xy': array([ 30, 300]), 'CAM exp': array([ 1, 50]), 'WBR xy': array([810, 370]), 'yax ch': array([4]), 'xax sc': array([1, 0, 0]), 'box ul': array([100, 255, 255]), 'WBR sc': array([0]), 'yax sc': array([1, 0, 0]), 'CAM bcs': array([128, 128, 128]), 'hue lo': array([180., 150.]), 'c34 ul': array([ 40, 255, 255]), 'c12 ll': array([140,  20,  40]), 'CAM foc': array([ 1, 60]), 'ROI wh': array([920, 590]), 'xax ch': array([31]), 'c12 ul': array([160, 255, 255]), 'box ll': array([80, 20, 40]), 'ROI ll': array([ 0, 70,  0]), 'c34 ll': array([20, 60, 40]), 'WBR ul': array([255,  30, 255]), 'WBR wh': array([270, 450]), 'ROI ul': array([180, 255, 255]), 'WBR ll': array([0, 0, 0])}
+{'ROI xy': array([ 30, 300]), 'CwAM exp': array([ 1, 50]), 'WBR xy': array([810, 370]), 'yax ch': array([4]), 'xax sc': array([1, 0, 0]), 'box ul': array([100, 255, 255]), 'WBR sc': array([0]), 'yax sc': array([1, 0, 0]), 'CAM bcs': array([128, 128, 128]), 'hue lo': array([180., 150.]), 'c34 ul': array([ 40, 255, 255]), 'c12 ll': array([140,  20,  40]), 'CAM foc': array([ 1, 60]), 'ROI wh': array([920, 590]), 'xax ch': array([31]), 'c12 ul': array([160, 255, 255]), 'box ll': array([80, 20, 40]), 'ROI ll': array([ 0, 70,  0]), 'c34 ll': array([20, 60, 40]), 'WBR ul': array([255,  30, 255]), 'WBR wh': array([270, 450]), 'ROI ul': array([180, 255, 255]), 'WBR ll': array([0, 0, 0])}
 '''
 
 #qrimg = qrcode.make(settingString)
