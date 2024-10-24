@@ -431,7 +431,9 @@ def WhiteBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,wbList
 
 def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refList=['RF1']):
     rgbCLR=np.zeros((rotImage.shape),dtype='uint8')
-    for refRegion in refList:
+    referenceStats=np.zeros((16,len(refList)))    
+
+    for refRegion,refNumber in zip(refList,range(len(refList))):
         rgbCLR[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]] = rotImage[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]]
         cv2.rectangle(frameForDrawing,(dictSet[refRegion+' xy'][0],dictSet[refRegion+' xy'][1]),(dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0],dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1]),(255,0,0),10 )
         if dictSet[refRegion+' hs'][2]!=0:
@@ -441,7 +443,15 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
             valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,refRegion,dictSet,connectedOnly=False)                
         if dictSet[refRegion+' ds'][2]!=0:
             displayFrame=OpenCVComposite(resRGB, displayFrame, dictSet[refRegion+' ds'])
-    return(rgbCLR,rotImage,frame,frameForDrawing)
+            
+        referenceStats[0:12,refNumber]=valSummary
+        area=cv2.countNonZero(resMask)
+        referenceStats[12,refNumber]=area
+        if area>0:
+            referenceStats[13,refNumber]=boundingRectangle[1][0]
+            referenceStats[14,refNumber]=boundingRectangle[1][1]
+            referenceStats[15,refNumber]=contourArea
+    return(referenceStats,rgbCLR,rotImage,frame,frameForDrawing)
 
 def OpenCVComposite(sourceImage, targetImage,settingsWHS):
     if (sourceImage.size==0) or (sourceImage.shape[1]==0) or (sourceImage.shape[0]==0):
@@ -605,7 +615,8 @@ def SummarizeFrame(frame,dictSet,histogramHeight=0):
        
 def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],refList=["RF1"]):
     frameForDrawing=np.copy(frame)
-    frameStats=np.zeros((16,6,len(roiList)))    
+    frameStats=np.zeros((16,2,len(roiList)))    
+    referenceColorStats=np.zeros((16,len(refList))) 
     if dictSet['flg rf'][0]==1:
         rotImage,frameForDrawing = RegisterImageColorCard(frame,frameForDrawing,dictSet)
         skipFrame=False
@@ -637,7 +648,7 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
             #rgbWBRsummary=cv2.meanStdDev(rgbWBR,mask=maskWBR)
             #resFrameWBR = cv2.bitwise_and(rgbWBR,rgbWBR, mask= maskWBR)
         if dictSet['flg wb'][1]==1:
-            rgbCLR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
+            referenceColorStats,rgbCLR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
             if dictSet['flg di'][0]==1:
                 cv2.imshow("CLR",rgbCLR)
         if dictSet['flg di'][0]==1:
@@ -667,7 +678,7 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
                     x,y,w,h = cv2.boundingRect(resMask)
                 #displayFrame=OpenCVComposite(resRGB[x:x+w,y:y+h,:], displayFrame, dictSet[roiSetName+' cs'])
                     displayFrame=OpenCVComposite(resRGB[y:y+h,x:x+w,:], displayFrame, dictSet[roiSetName+' cs'])
-    return frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing
+    return frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing
 
 def ToggleFlag(flagName,dictSet):
     if dictSet[flagName][0]==1:
@@ -873,6 +884,9 @@ def WriteMultiFrameDataToExcel(parameterStats,roiList,outExcelFileName):
         #worksheetData = workbook.add_worksheet(roiSetName)
         dfMean.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=10,index=False)
         dfStdev.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=23,index=False)
+        for reference in range(len(refList)):
+            dfRef=pd.DataFrame(data=parameterStats[0:12,2+reference,dfCollected,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,dfCollected,1])
+            dfRef.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=36+(reference*13),index=False)
         #dfMost.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=36,index=False)
         worksheetData = writer.sheets[roiSetName]
         worksheetData.write('K1', 'Means')
@@ -1089,7 +1103,7 @@ else:
     totalFrames=10000
 
 totalIndex=int(totalFrames/dictSet['set fr'][0])
-parameterStats=np.zeros((32,6,totalIndex+dictSet['set fr'][0],5))
+parameterStats=np.zeros((32,8,totalIndex+dictSet['set fr'][0],5))
 if totalFrames==1:
     grabbedStats=np.zeros((32,6,100,5))
 else:
@@ -1234,8 +1248,9 @@ while frameNumber<=totalFrames:
                 sgList.append(setting[0:3])
                     
     if dictSet['flg pf'][0]!=0:
-        frameStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
-        parameterStats[0:16,:,frameIndex,0:frameStats.shape[2]]=frameStats
+        frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
+        parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
+        parameterStats[0:16,2:8,frameIndex,0]=referenceColorStats
         parameterStats[16,0,frameIndex,:]=mass
         for signal,index in zip(sgList,range(len(sgList))):
             setingIndexer1=dictSet['SG'+str(index+1)+' c1']
