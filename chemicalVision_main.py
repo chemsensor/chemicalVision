@@ -672,7 +672,7 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
             #rgbWBRsummary=cv2.meanStdDev(rgbWBR,mask=maskWBR)
             #resFrameWBR = cv2.bitwise_and(rgbWBR,rgbWBR, mask= maskWBR)
         if dictSet['flg wb'][1]==1:
-            referenceColorStats,rgbCLR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
+            referenceColorStats,rgbCLR,tableB,tableG,tableR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
             if dictSet['flg di'][0]==1:
                 cv2.imshow("CLR",rgbCLR)
         if dictSet['flg di'][0]==1:
