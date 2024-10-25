@@ -164,6 +164,22 @@ settingsFile = open(settings_file_path,'r')
 settingString=settingsFile.read()
 settingsFile.close()
 dictSet=eval(settingString)
+
+if dictSet['flg hb']==1:
+    root = tk.Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    reference_file_path = askopenfilename(initialdir=filePathSettings,filetypes=[('settings files', '.ref'),('all files', '.*')])
+    if len(reference_file_path)==0:
+        reference_file_path=filePathSettings+osSep+"default_reference.ref"
+    dfReference = pd.read_csv(reference_file_path)
+    templateHistogram=np.zeros((3,256))
+    templateHistogram[0,:]=dfReference['BlueHist']
+    templateHistogram[1,:]=dfReference['GreenHist']
+    templateHistogram[2,:]=dfReference['RedHist']
+else:
+    templateHistogram=np.zeros((3,256))
+        
 print('Running, press "q" to quit')
 
 def FindLargestContour(mask):
@@ -432,7 +448,6 @@ def WhiteBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,wbList
 def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refList=['RF1']):
     rgbCLR=np.zeros((rotImage.shape),dtype='uint8')
     referenceStats=np.zeros((16,len(refList)))    
-
     for refRegion,refNumber in zip(refList,range(len(refList))):
         rgbCLR[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]] = rotImage[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]]
         cv2.rectangle(frameForDrawing,(dictSet[refRegion+' xy'][0],dictSet[refRegion+' xy'][1]),(dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0],dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1]),(255,0,0),10 )
@@ -451,7 +466,16 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
             referenceStats[13,refNumber]=boundingRectangle[1][0]
             referenceStats[14,refNumber]=boundingRectangle[1][1]
             referenceStats[15,refNumber]=contourArea
-    return(referenceStats,rgbCLR,rotImage,frame,frameForDrawing)
+        
+        if (dictSet['flg hb']==1):
+            tableB=HistogramMatchTable(resRGB[:,:,0], templateHistogram[0])
+            tableG=HistogramMatchTable(resRGB[:,:,1], templateHistogram[1])
+            tableR=HistogramMatchTable(resRGB[:,:,2], templateHistogram[2])
+        else:
+            tableB=[]
+            tableG=[]
+            tableR=[]
+    return(referenceStats,rgbCLR,tableB,tableG,tableR,rotImage,frame,frameForDrawing)
 
 def OpenCVComposite(sourceImage, targetImage,settingsWHS):
     if (sourceImage.size==0) or (sourceImage.shape[1]==0) or (sourceImage.shape[0]==0):
@@ -916,34 +940,42 @@ def WriteMultiFrameDataToExcel(parameterStats,roiList,outExcelFileName):
     writer.close()
 
 def WriteSingleFrameDataToExcel(frameStats,roiList,outExcelFileName):
-    dfMean=pd.DataFrame(data=frameStats[0:12,0,0:len(roiList)].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"])
-    dfStdev=pd.DataFrame(data=frameStats[0:12,1,0:len(roiList)].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"])
-    dfMost=pd.DataFrame(data=frameStats[0:12,2,0:len(roiList)].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"])
     writer = pd.ExcelWriter(outExcelFileName, engine='xlsxwriter')
-    workbook  = writer.book
-    dfMean.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=9,index=False)
-    dfStdev.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=22,index=False)
-    dfMost.to_excel(writer, sheet_name='FrameData',startrow=1,startcol=35,index=False)
-    worksheetData = writer.sheets['FrameData']
-    worksheetData.write('J1', 'Means')
-    worksheetData.write('W1', 'Standard Deviations')
-    worksheetData.write('AJ1', 'Most Frequent Values')
-    worksheetData.write('A2', 'FrameNumber')
-    worksheetData.write('B2', 'FrameRate')
-    worksheetData.write('C2', 'Time')
-    worksheetData.write('D2', 'Area')
-    worksheetData.write('E2', 'Height')
-    worksheetData.write('F2', 'Width')
-    worksheetData.write('G2', 'ContourArea')
-    worksheetData.write('H2', 'Mass')
-    worksheetData.write_column('A3', frameStats[30,0,0:len(roiList)])
-    worksheetData.write_column('B3', frameStats[29,0,0:len(roiList)])
-    worksheetData.write_column('C3', frameStats[28,0,0:len(roiList)])
-    worksheetData.write_column('D3', frameStats[12,0,0:len(roiList)])
-    worksheetData.write_column('E3', frameStats[13,0,0:len(roiList)])
-    worksheetData.write_column('F3', frameStats[14,0,0:len(roiList)])
-    worksheetData.write_column('G3', frameStats[15,0,0:len(roiList)])
-    worksheetData.write_column('H3', frameStats[16,0,0:len(roiList)])
+    for roiSetName,roiNumber in zip(roiList,range(len(roiList))):
+
+        dfMean=pd.DataFrame(data=frameStats[0:12,0,0:len(roiList)].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"])
+        dfStdev=pd.DataFrame(data=frameStats[0:12,1,0:len(roiList)].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"])
+
+        dfMean.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=10,index=False)
+
+        dfMean.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=9,index=False)
+        dfStdev.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=22,index=False)
+        
+        #problem in following section
+        for reference in range(len(refList)):
+            dfRef=pd.DataFrame(data=frameStats[0:12,2+reference,0,roiNumber].transpose(),columns=["R","G","B","H","S","V","L*","a*","b*","Ra","Ga","Ba"],index=parameterStats[31,0,0,1])
+            dfRef.to_excel(writer, sheet_name=roiSetName,startrow=1,startcol=36+(reference*13),index=False)
+    
+        worksheetData = writer.sheets['FrameData']
+        worksheetData.write('J1', 'Means')
+        worksheetData.write('W1', 'Standard Deviations')
+        worksheetData.write('AJ1', 'Most Frequent Values')
+        worksheetData.write('A2', 'FrameNumber')
+        worksheetData.write('B2', 'FrameRate')
+        worksheetData.write('C2', 'Time')
+        worksheetData.write('D2', 'Area')
+        worksheetData.write('E2', 'Height')
+        worksheetData.write('F2', 'Width')
+        worksheetData.write('G2', 'ContourArea')
+        worksheetData.write('H2', 'Mass')
+        worksheetData.write_column('A3', frameStats[30,0,0:len(roiList)])
+        worksheetData.write_column('B3', frameStats[29,0,0:len(roiList)])
+        worksheetData.write_column('C3', frameStats[28,0,0:len(roiList)])
+        worksheetData.write_column('D3', frameStats[12,0,0:len(roiList)])
+        worksheetData.write_column('E3', frameStats[13,0,0:len(roiList)])
+        worksheetData.write_column('F3', frameStats[14,0,0:len(roiList)])
+        worksheetData.write_column('G3', frameStats[15,0,0:len(roiList)])
+        worksheetData.write_column('H3', frameStats[16,0,0:len(roiList)])
     workbook.close()
     #writer.save()
 
@@ -1055,6 +1087,16 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
     ip.OpenCVPutText(decodeFrame,'{0:.2f}'.format(total),(2,decodeFrame.shape[0]-16),(255,255,255),fontScale = 1.2)
     return total,decodeFrame
 
+def HistogramMatchTable(source, template_cdf):
+    # Compute the histograms and their normalized CDFs
+    src_hist, _ = np.histogram(source.ravel(), 256, [0,256])
+    #tgt_hist, _ = np.histogram(template.ravel(), 256, [0,256])
+    src_cdf = np.cumsum(src_hist) / float(source.size)
+    #tgt_cdf = np.cumsum(tgt_hist) / float(template.size)
+    
+    # Create a mapping from source values to target values
+    table = np.interp(src_cdf, template_cdf, np.arange(256))
+    return table
 
 
 
@@ -1105,9 +1147,9 @@ else:
 totalIndex=int(totalFrames/dictSet['set fr'][0])
 parameterStats=np.zeros((32,8,totalIndex+dictSet['set fr'][0],5))
 if totalFrames==1:
-    grabbedStats=np.zeros((32,6,100,5))
+    grabbedStats=np.zeros((32,8,100,5))
 else:
-    grabbedStats=np.zeros((32,6,totalIndex,5))
+    grabbedStats=np.zeros((32,8,totalIndex,5))
 grabCount=0
     
 #ParameterStats Map
@@ -1449,9 +1491,10 @@ if grabCount!=0:
         root.withdraw()
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_grabbedData' ,defaultextension='.xlsx')
         if grabCount==1:
-            WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
+#            WriteSingleFrameDataToExcel(grabbedStats[:,:,0,:],roiList,data_file_path)
+            WriteMultiFrameDataToExcel(grabbedStats[:,:,0:grabCount,:],roiList,data_file_path)
         else:
-            WriteMultiFrameDataToExcel(grabbedStats[:,:,0:grabCount,:],0,data_file_path)
+            WriteMultiFrameDataToExcel(grabbedStats[:,:,0:grabCount,:],roiList,data_file_path)
 
 if frameIndex>0:
     saveSettings = input("Save all frame values (Y/n)?")
