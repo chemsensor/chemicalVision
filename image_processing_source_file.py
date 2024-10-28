@@ -136,3 +136,9 @@ def OpenCVRotateBound(image, angle):
     M[1, 2] += (nH / 2) - cY
     # perform the actual rotation and return the image
     return cv2.warpAffine(image, M, (nW, nH))
+
+def OpenCVHistogramBalanceImage(frame,tableR,tableG,tableB):
+    frame[:,:,0]=cv2.LUT(frame[:,:,0], tableB)
+    frame[:,:,1]=cv2.LUT(frame[:,:,1], tableG)
+    frame[:,:,2]=cv2.LUT(frame[:,:,2], tableR)
+    return frame

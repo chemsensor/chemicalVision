@@ -169,9 +169,9 @@ if dictSet['flg hb'][0]==1:
     root = tk.Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
-    reference_file_path = askopenfilename(initialdir=filePathSettings,filetypes=[('settings files', '.csv'),('all files', '.*')])
+    reference_file_path = askopenfilename(initialdir=filePathSettings,filetypes=[('settings files', '.ref'),('all files', '.*')])
     if len(reference_file_path)==0:
-        reference_file_path=filePathSettings+osSep+"default_reference.csv"
+        reference_file_path=filePathSettings+osSep+"default_reference.ref"
     dfReference = pd.read_csv(reference_file_path)
     templateHistogram=np.zeros((3,256))
     templateHistogram[0,:]=dfReference['BlueHist']
@@ -466,12 +466,14 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
             referenceStats[13,refNumber]=boundingRectangle[1][0]
             referenceStats[14,refNumber]=boundingRectangle[1][1]
             referenceStats[15,refNumber]=contourArea
+        
+        if dictSet['flg hb'][0]==2:
+            cv2.imshow("CLR",rgbCLR)
+                
         if (dictSet['flg hb'][0]==1):
-            tableB=HistogramMatchTable(rgbCLR[:,:,0], templateHistogram[0])
-            tableG=HistogramMatchTable(rgbCLR[:,:,1], templateHistogram[1])
-            tableR=HistogramMatchTable(rgbCLR[:,:,2], templateHistogram[2])
-            rotImage=ip.OpenCVHistogramBalanceImage(rotImage,tableR,tableG,tableB)
-            frame=ip.OpenCVHistogramBalanceImage(frame,tableR,tableG,tableB)
+            tableB=HistogramMatchTable(resRGB[:,:,0], templateHistogram[0])
+            tableG=HistogramMatchTable(resRGB[:,:,1], templateHistogram[1])
+            tableR=HistogramMatchTable(resRGB[:,:,2], templateHistogram[2])
         else:
             tableB=[]
             tableG=[]
@@ -703,7 +705,7 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
                     x,y,w,h = cv2.boundingRect(resMask)
                 #displayFrame=OpenCVComposite(resRGB[x:x+w,y:y+h,:], displayFrame, dictSet[roiSetName+' cs'])
                     displayFrame=OpenCVComposite(resRGB[y:y+h,x:x+w,:], displayFrame, dictSet[roiSetName+' cs'])
-    return frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing
+    return frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR
 
 def ToggleFlag(flagName,dictSet):
     if dictSet[flagName][0]==1:
@@ -1091,12 +1093,11 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
 def HistogramMatchTable(source, template_cdf):
     # Compute the histograms and their normalized CDFs
     src_hist, _ = np.histogram(source.ravel(), 256, [0,256])
-    nonBlack=float(source.size)-src_hist[0]
     src_hist[0] = 0
-
     #tgt_hist, _ = np.histogram(template.ravel(), 256, [0,256])
-    src_cdf = np.cumsum(src_hist) / float(nonBlack)
+    src_cdf = np.cumsum(src_hist) / float(source.size)
     #tgt_cdf = np.cumsum(tgt_hist) / float(template.size)
+    
     # Create a mapping from source values to target values
     table = np.interp(src_cdf, template_cdf, np.arange(256))
     return table
@@ -1291,7 +1292,7 @@ while frameNumber<=totalFrames:
                 sgList.append(setting[0:3])
                     
     if dictSet['flg pf'][0]!=0:
-        frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
+        frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
         parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
         parameterStats[0:16,2:8,frameIndex,0]=referenceColorStats
         parameterStats[16,0,frameIndex,:]=mass
@@ -1514,6 +1515,27 @@ if frameIndex>0:
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('Excel files', '.xlsx'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
         da.ProcessI2(sgList,parameterStats,dictSet,frameIndex,data_file_path)
 
+if dictSet['flg hb'][0]==2:
+    saveSettings = input("Save target histograms (Y/n)?")
+    if (saveSettings=="Y") | (saveSettings=="y"):
+        root = tk.Tk()
+        root.withdraw()
+        data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('CSV files', '.csv'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
+        tgt_histB, _ = np.histogram(rgbCLR[:,:,0].ravel(), 256, [0,256])
+        nonBlack=float(rgbCLR[:,:,0].size)-tgt_histB[0]
+        tgt_histB[0] = 0
+        tgt_cdfB = np.cumsum(tgt_histB) / float(nonBlack)
+        tgt_histG, _ = np.histogram(rgbCLR[:,:,1].ravel(), 256, [0,256])
+        nonBlack=float(rgbCLR[:,:,1].size)-tgt_histG[0]
+        tgt_histG[0] = 0
+        tgt_cdfG = np.cumsum(tgt_histG) / float(nonBlack)
+        tgt_histR, _ = np.histogram(rgbCLR[:,:,2].ravel(), 256, [0,256])
+        nonBlack=float(rgbCLR[:,:,2].size)-tgt_histR[0]
+        tgt_histR[0] = 0
+        tgt_cdfR = np.cumsum(tgt_histR) / float(nonBlack)
+        dfTargetCDFs = pd.DataFrame({'BlueHist':tgt_cdfB, 'GreenHist':tgt_cdfG, 'RedHist':tgt_cdfR})
+        dfTargetCDFs.to_csv(data_file_path, index=False)  
+    
 # dropSignal=parameterStats[dictSet['CNT yc'][0],dictSet['CNT yc'][1],0:frameIndex,dictSet['CNT yc'][2]]
 # boolDrop=da.hyst(dropSignal, dictSet['CNT hy'][0], dictSet['CNT hy'][1])
 # times,frames=da.crossBoolean(parameterStats[dictSet['CNT xc'][0],dictSet['CNT xc'][1],0:frameIndex,dictSet['CNT xc'][2]], boolDrop, crossPoint=0.5, direction='rising')
