@@ -662,6 +662,10 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
         skipFrame=False
     rotForDrawing=np.copy(rotImage)
     if skipFrame==False:
+        if dictSet['flg wb'][1]==1:
+            referenceColorStats,rgbCLR,tableB,tableG,tableR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
+            if dictSet['flg di'][0]==1:
+                cv2.imshow("CLR",rgbCLR)
         if dictSet['flg wb'][0]==1:
             rgbWBR,rotImage,frame,rotForDrawing=WhiteBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,wbList=wbList)
             if dictSet['flg di'][0]==1:
@@ -672,10 +676,6 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
             #maskWBR = cv2.inRange(hsvWBR, np.array(dictSet['WBR ll']), np.array(dictSet['WBR ul']))
             #rgbWBRsummary=cv2.meanStdDev(rgbWBR,mask=maskWBR)
             #resFrameWBR = cv2.bitwise_and(rgbWBR,rgbWBR, mask= maskWBR)
-        if dictSet['flg wb'][1]==1:
-            referenceColorStats,rgbCLR,tableB,tableG,tableR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
-            if dictSet['flg di'][0]==1:
-                cv2.imshow("CLR",rgbCLR)
         if dictSet['flg di'][0]==1:
             cv2.imshow("RotatedImage",rotImage)
         for roiSetName,roiNumber in zip(roiList,range(len(roiList))):

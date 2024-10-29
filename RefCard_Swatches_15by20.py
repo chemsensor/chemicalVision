@@ -58,6 +58,21 @@ for swatchNum in range(numberSwatches):
     cv2.rectangle(ReferenceImage, (borderMargin+swatchMargin,swatchNum*refSwatchSpacing+swatchMargin), (borderMargin+swatchMargin+refSwatchDimension,swatchNum*refSwatchSpacing+refSwatchDimension+swatchMargin), swatchLeftColor , -1) #left side of rectangle
     cv2.rectangle(ReferenceImage, (paperWidth-borderMargin-swatchMargin-refSwatchDimension,swatchNum*refSwatchSpacing+swatchMargin), (paperWidth-borderMargin-swatchMargin,swatchNum*refSwatchSpacing+refSwatchDimension+swatchMargin), swatchRightColor , -1) #left side of rectangle
 
+refBarHeight=refSwatchDimension
+refBarLength=paperWidth-borderMargin*2-swatchMargin*4-refSwatchDimension*2
+hueRange=np.linspace(100,120,refBarHeight)
+satRange=np.linspace(0,255,refBarLength)
+valRange=255
+sensorColorBar = np.full((refBarHeight,refBarLength, 3), valRange,np.uint8)
+for column in range(refBarLength):
+    sensorColorBar[:,column,0]=hueRange
+for row in range(refBarHeight):
+    sensorColorBar[row,:,1]=satRange
+rgbFrame = cv2.cvtColor(sensorColorBar, cv2.COLOR_HSV2BGR)
+#cv2.imshow('rgbFrame', rgbFrame)
+x=borderMargin+swatchMargin+refSwatchDimension+swatchMargin
+y=paperHeight-borderMargin-swatchMargin*4-refSwatchDimension
+ReferenceImage[y:y+refBarHeight,x:x+refBarLength]=rgbFrame
 
 #ReferenceImage[395:395+open_qr_image.shape[0],1090:1090+open_qr_image.shape[1],:]=open_qr_image
 #cv2.putText(ReferenceImage,"Iodination",(1100,380), font, 1,(0,0,0),1,cv2.LINE_AA)
