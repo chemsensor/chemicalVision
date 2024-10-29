@@ -169,9 +169,9 @@ if dictSet['flg hb'][0]==1:
     root = tk.Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
-    reference_file_path = askopenfilename(initialdir=filePathSettings,filetypes=[('settings files', '.ref'),('all files', '.*')])
+    reference_file_path = askopenfilename(initialdir=filePathSettings,filetypes=[('reference files', '.csv'),('all files', '.*')])
     if len(reference_file_path)==0:
-        reference_file_path=filePathSettings+osSep+"default_reference.ref"
+        reference_file_path=filePathSettings+osSep+"default_reference.csv"
     dfReference = pd.read_csv(reference_file_path)
     templateHistogram=np.zeros((3,256))
     templateHistogram[0,:]=dfReference['BlueHist']
@@ -1294,7 +1294,7 @@ while frameNumber<=totalFrames:
     if dictSet['flg pf'][0]!=0:
         frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
         parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
-        parameterStats[0:16,2:8,frameIndex,0]=referenceColorStats
+        parameterStats[0:16,2:referenceColorStats.shape[1]+2,frameIndex,0]=referenceColorStats
         parameterStats[16,0,frameIndex,:]=mass
         for signal,index in zip(sgList,range(len(sgList))):
             setingIndexer1=dictSet['SG'+str(index+1)+' c1']

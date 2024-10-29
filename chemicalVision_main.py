@@ -466,16 +466,16 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
             referenceStats[13,refNumber]=boundingRectangle[1][0]
             referenceStats[14,refNumber]=boundingRectangle[1][1]
             referenceStats[15,refNumber]=contourArea
-        if (dictSet['flg hb'][0]==1):
-            tableB=HistogramMatchTable(rgbCLR[:,:,0], templateHistogram[0])
-            tableG=HistogramMatchTable(rgbCLR[:,:,1], templateHistogram[1])
-            tableR=HistogramMatchTable(rgbCLR[:,:,2], templateHistogram[2])
-            rotImage=ip.OpenCVHistogramBalanceImage(rotImage,tableR,tableG,tableB)
-            frame=ip.OpenCVHistogramBalanceImage(frame,tableR,tableG,tableB)
-        else:
-            tableB=[]
-            tableG=[]
-            tableR=[]
+    if (dictSet['flg hb'][0]==1):
+        tableB=HistogramMatchTable(rgbCLR[:,:,0], templateHistogram[0])
+        tableG=HistogramMatchTable(rgbCLR[:,:,1], templateHistogram[1])
+        tableR=HistogramMatchTable(rgbCLR[:,:,2], templateHistogram[2])
+        rotImage=ip.OpenCVHistogramBalanceImage(rotImage,tableR,tableG,tableB)
+        frame=ip.OpenCVHistogramBalanceImage(frame,tableR,tableG,tableB)
+    else:
+        tableB=[]
+        tableG=[]
+        tableR=[]
     return(referenceStats,rgbCLR,tableB,tableG,tableR,rotImage,frame,frameForDrawing)
 
 def OpenCVComposite(sourceImage, targetImage,settingsWHS):
@@ -1293,7 +1293,7 @@ while frameNumber<=totalFrames:
     if dictSet['flg pf'][0]!=0:
         frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
         parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
-        parameterStats[0:16,2:8,frameIndex,0]=referenceColorStats
+        parameterStats[0:16,2:referenceColorStats.shape[1]+2,frameIndex,0]=referenceColorStats
         parameterStats[16,0,frameIndex,:]=mass
         for signal,index in zip(sgList,range(len(sgList))):
             setingIndexer1=dictSet['SG'+str(index+1)+' c1']
