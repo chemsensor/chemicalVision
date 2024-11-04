@@ -78,7 +78,7 @@ cv2.putText(ReferenceImage, barText, (x-refSwatchDimension,y+refBarHeight+swatch
 refBarHeight=paperHeight-borderMargin-swatchMargin*4
 refBarLength=refSwatchDimension
 hueRange=np.linspace(0,180,refBarHeight)
-satRange=np.linspace(0,255,refBarLength)
+satRange=np.linspace(64,255,refBarLength)
 valRange=255
 sensorColorBar = np.full((refBarHeight,refBarLength, 3), valRange,np.uint8)
 for column in range(refBarLength):
@@ -97,7 +97,7 @@ cv2.putText(ReferenceImage, barText, (x,y+refBarHeight+swatchMargin), font, .5,(
 refBarHeight=refSwatchDimension
 refBarLength=paperWidth-borderMargin*2-swatchMargin*4-refSwatchDimension*2
 hueRange=np.linspace(100,120,refBarHeight)
-satRange=np.linspace(0,255,refBarLength)
+satRange=np.linspace(20,255,refBarLength)
 valRange=255
 sensorColorBar = np.full((refBarHeight,refBarLength, 3), valRange,np.uint8)
 for column in range(refBarLength):
