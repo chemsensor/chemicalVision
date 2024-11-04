@@ -47,16 +47,52 @@ circleText=circleText+"; M:("+str(paperWidth-circlePad)+","+str(circlePad)+")("+
 cv2.putText(ReferenceImage, circleText, (borderMargin*3,paperHeight-borderMargin-swatchMargin), font, 1,(0,0,0),1,cv2.LINE_AA)
 
 
-colorsRightSwatchs=[[0,0,255],[0,255,255],[0,255,0],[255,255,0],[255,0,0],[255,0,255]]
+# colorsRightSwatchs=[[0,0,255],[0,255,255],[0,255,0],[255,255,0],[255,0,0],[255,0,255]]
 
-for swatchNum in range(numberSwatches):
-    r=(255/numberSwatches*(swatchNum+1))
-    g=r
-    b=r
-    swatchLeftColor=[b,g,r]
-    swatchRightColor=colorsRightSwatchs[swatchNum]
-    cv2.rectangle(ReferenceImage, (borderMargin+swatchMargin,swatchNum*refSwatchSpacing+swatchMargin), (borderMargin+swatchMargin+refSwatchDimension,swatchNum*refSwatchSpacing+refSwatchDimension+swatchMargin), swatchLeftColor , -1) #left side of rectangle
-    cv2.rectangle(ReferenceImage, (paperWidth-borderMargin-swatchMargin-refSwatchDimension,swatchNum*refSwatchSpacing+swatchMargin), (paperWidth-borderMargin-swatchMargin,swatchNum*refSwatchSpacing+refSwatchDimension+swatchMargin), swatchRightColor , -1) #left side of rectangle
+# for swatchNum in range(numberSwatches):
+#     r=(255/numberSwatches*(swatchNum+1))
+#     g=r
+#     b=r
+#     swatchLeftColor=[b,g,r]
+#     swatchRightColor=colorsRightSwatchs[swatchNum]
+#     cv2.rectangle(ReferenceImage, (borderMargin+swatchMargin,swatchNum*refSwatchSpacing+swatchMargin), (borderMargin+swatchMargin+refSwatchDimension,swatchNum*refSwatchSpacing+refSwatchDimension+swatchMargin), swatchLeftColor , -1) #left side of rectangle
+#     cv2.rectangle(ReferenceImage, (paperWidth-borderMargin-swatchMargin-refSwatchDimension,swatchNum*refSwatchSpacing+swatchMargin), (paperWidth-borderMargin-swatchMargin,swatchNum*refSwatchSpacing+refSwatchDimension+swatchMargin), swatchRightColor , -1) #left side of rectangle
+
+refBarHeight=paperHeight-borderMargin-swatchMargin*4
+refBarwidth=refSwatchDimension
+intRange=np.linspace(0,255,refBarHeight)
+valRange=255
+sensorColorBar = np.full((refBarHeight,refBarwidth, 3), valRange,np.uint8)
+for row in range(refBarwidth):
+    sensorColorBar[:,row,0]=intRange
+    sensorColorBar[:,row,1]=intRange
+    sensorColorBar[:,row,2]=intRange
+#cv2.imshow('rgbFrame', rgbFrame)
+x=paperWidth-borderMargin-swatchMargin-refSwatchDimension
+y=swatchMargin*2
+ReferenceImage[y:y+refBarHeight,x:x+refBarwidth]=sensorColorBar
+barText="xy:("+str(x)+","+str(y)+")"
+barText=barText+"; wh:("+str(refBarwidth)+","+str(refBarHeight)+")"
+cv2.putText(ReferenceImage, barText, (x-refSwatchDimension,y+refBarHeight+swatchMargin), font, .5,(0,0,0),1,cv2.LINE_AA)
+
+refBarHeight=paperHeight-borderMargin-swatchMargin*4
+refBarLength=refSwatchDimension
+hueRange=np.linspace(0,180,refBarHeight)
+satRange=np.linspace(0,255,refBarLength)
+valRange=255
+sensorColorBar = np.full((refBarHeight,refBarLength, 3), valRange,np.uint8)
+for column in range(refBarLength):
+    sensorColorBar[:,column,0]=hueRange
+for row in range(refBarHeight):
+    sensorColorBar[row,:,1]=satRange
+rgbFrame = cv2.cvtColor(sensorColorBar, cv2.COLOR_HSV2BGR)
+#cv2.imshow('rgbFrame', rgbFrame)
+x=borderMargin+swatchMargin
+y=swatchMargin*2
+ReferenceImage[y:y+refBarHeight,x:x+refBarLength]=rgbFrame
+barText="xy:("+str(x)+","+str(y)+")"
+barText=barText+"; wh:("+str(refBarwidth)+","+str(refBarHeight)+")"
+cv2.putText(ReferenceImage, barText, (x,y+refBarHeight+swatchMargin), font, .5,(0,0,0),1,cv2.LINE_AA)
 
 refBarHeight=refSwatchDimension
 refBarLength=paperWidth-borderMargin*2-swatchMargin*4-refSwatchDimension*2
@@ -73,6 +109,10 @@ rgbFrame = cv2.cvtColor(sensorColorBar, cv2.COLOR_HSV2BGR)
 x=borderMargin+swatchMargin+refSwatchDimension+swatchMargin
 y=paperHeight-borderMargin-swatchMargin*4-refSwatchDimension
 ReferenceImage[y:y+refBarHeight,x:x+refBarLength]=rgbFrame
+barText="xy:("+str(x)+","+str(y)+")"
+barText=barText+"; wh:("+str(refBarLength)+","+str(refBarHeight)+")"
+cv2.putText(ReferenceImage, barText, (x+int(refBarLength/2),y+refBarHeight+swatchMargin), font, .5,(0,0,0),1,cv2.LINE_AA)
+
 
 #ReferenceImage[395:395+open_qr_image.shape[0],1090:1090+open_qr_image.shape[1],:]=open_qr_image
 #cv2.putText(ReferenceImage,"Iodination",(1100,380), font, 1,(0,0,0),1,cv2.LINE_AA)
