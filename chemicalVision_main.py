@@ -666,6 +666,8 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
             referenceColorStats,rgbCLR,tableB,tableG,tableR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
             if dictSet['flg di'][0]==1:
                 cv2.imshow("CLR",rgbCLR)
+        else:
+            rgbCLR=[[0]]
         if dictSet['flg wb'][0]==1:
             rgbWBR,rotImage,frame,rotForDrawing=WhiteBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,wbList=wbList)
             if dictSet['flg di'][0]==1:
@@ -703,7 +705,9 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
                     x,y,w,h = cv2.boundingRect(resMask)
                 #displayFrame=OpenCVComposite(resRGB[x:x+w,y:y+h,:], displayFrame, dictSet[roiSetName+' cs'])
                     displayFrame=OpenCVComposite(resRGB[y:y+h,x:x+w,:], displayFrame, dictSet[roiSetName+' cs'])
-    return frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing, rgbCLR
+    else:
+        rgbCLR=[[0]]
+    return frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR
 
 def ToggleFlag(flagName,dictSet):
     if dictSet[flagName][0]==1:
@@ -1291,7 +1295,7 @@ while frameNumber<=totalFrames:
                 sgList.append(setting[0:3])
                     
     if dictSet['flg pf'][0]!=0:
-        frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing, rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
+        frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
         parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
         parameterStats[0:16,2:referenceColorStats.shape[1]+2,frameIndex,0]=referenceColorStats
         parameterStats[16,0,frameIndex,:]=mass
