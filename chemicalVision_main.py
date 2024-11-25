@@ -177,6 +177,17 @@ if dictSet['flg hb'][0]==1:
     templateHistogram[0,:]=dfReference['BlueHist']
     templateHistogram[1,:]=dfReference['GreenHist']
     templateHistogram[2,:]=dfReference['RedHist']
+elif dictSet['flg hb'][0]==3:
+    root = tk.Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    reference_file_path = askopenfilename(initialdir=filePathSettings,filetypes=[('reference image files', '.jpg'),('all files', '.*')])
+    if len(reference_file_path)==0:
+        reference_file_path=filePathSettings+osSep+"default_reference.jpg"
+    capref = cv2.VideoCapture(reference_file_path)
+    ret, referenceFrame = capref.read()
+    capref.release()
+    templateHistogram=np.zeros((3,256))
 else:
     templateHistogram=np.zeros((3,256))
         
@@ -467,6 +478,27 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
             referenceStats[14,refNumber]=boundingRectangle[1][1]
             referenceStats[15,refNumber]=contourArea
     if (dictSet['flg hb'][0]==1):
+        tableB=HistogramMatchTable(rgbCLR[:,:,0], templateHistogram[0])
+        tableG=HistogramMatchTable(rgbCLR[:,:,1], templateHistogram[1])
+        tableR=HistogramMatchTable(rgbCLR[:,:,2], templateHistogram[2])
+        rotImage=ip.OpenCVHistogramBalanceImage(rotImage,tableR,tableG,tableB)
+        frame=ip.OpenCVHistogramBalanceImage(frame,tableR,tableG,tableB)
+    elif (dictSet['flg hb'][0]==3):
+        refCLR=np.zeros((referenceFrame.shape),dtype='uint8')
+        for refRegion,refNumber in zip(refList,range(len(refList))):
+            refCLR[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]] = referenceFrame [dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]]
+        tgt_histB, _ = np.histogram(refCLR[:,:,0].ravel(), 256, [0,256])
+        nonBlack=float(refCLR[:,:,0].size)-tgt_histB[0]
+        tgt_histB[0] = 0
+        templateHistogram[0] = np.cumsum(tgt_histB) / float(nonBlack)
+        tgt_histG, _ = np.histogram(refCLR[:,:,1].ravel(), 256, [0,256])
+        nonBlack=float(refCLR[:,:,1].size)-tgt_histG[0]
+        tgt_histG[0] = 0
+        templateHistogram[1] = np.cumsum(tgt_histG) / float(nonBlack)
+        tgt_histR, _ = np.histogram(refCLR[:,:,2].ravel(), 256, [0,256])
+        nonBlack=float(refCLR[:,:,2].size)-tgt_histR[0]
+        tgt_histR[0] = 0
+        templateHistogram[2] = np.cumsum(tgt_histR) / float(nonBlack)
         tableB=HistogramMatchTable(rgbCLR[:,:,0], templateHistogram[0])
         tableG=HistogramMatchTable(rgbCLR[:,:,1], templateHistogram[1])
         tableR=HistogramMatchTable(rgbCLR[:,:,2], templateHistogram[2])
@@ -1178,7 +1210,6 @@ else:
     videoFlag=False
     frameRate=0
     ret, originalFrame = cap.read() 
-
 outp = cv2.VideoWriter(outFileName,fourcc, frameRate, (dictSet['dsp wh'][0], dictSet['dsp wh'][1]))
 if (dictSet['FRM or'][0]==1) or dictSet['FRM or'][0]==3:
     outup = cv2.VideoWriter(outFileNameRaw,fourcc, frameRate, (dictSet['CAM wh'][1], dictSet['CAM wh'][0]))
