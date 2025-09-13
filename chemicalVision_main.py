@@ -1324,7 +1324,35 @@ while frameNumber<=totalFrames:
         if (setting[0:2]=="SG") & (setting[4:6]=="c1"):
             if (dictSet[setting][0]!=0):
                 sgList.append(setting[0:3])
-                    
+                
+    refSwatchX=[]
+    refSwatchY=[]
+    refSwatchVal=[]
+    for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
+        if (setting[0:2]=="RS") & (setting[4:6]=="cr"):
+            if (dictSet[setting][0]!=0) & (dictSet[setting][1]!=0):
+                cols=dictSet[setting][0]
+                rows=dictSet[setting][1]
+        if (setting[0:2]=="RS") & (setting[4:6]=="pH"):
+            valStart=dictSet[setting][0]
+            valIncrement=dictSet[setting][1]
+        if (setting[0:2]=="RS") & (setting[4:6]=="wh"):
+            width=dictSet[setting][0]
+            height=dictSet[setting][1]
+        if (setting[0:2]=="RS") & (setting[4:6]=="xy"):
+            xStart=dictSet[setting][0]
+            yStart=dictSet[setting][1]
+            for row in range(rows):
+                for col in range(cols):
+                    x=xStart+(width*col)
+                    y=yStart+(height*row)
+                    val=valStart+(valIncrement*col)
+                    refSwatchX.append(x)
+                    refSwatchY.append(y)
+                    refSwatchVal.append(val)
+    refSwatchWidth=width
+    refSwatchHeight=height
+                                         
     if dictSet['flg pf'][0]!=0:
         frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
         parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
