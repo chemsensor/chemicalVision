@@ -670,9 +670,10 @@ def SummarizeFrame(frame,dictSet,histogramHeight=0):
         mean,std,most=ip.OpenCVDisplayedHistogram(inputImage,channel,resMask,256,0,255,5,row*singleHeight+5,256,singleHeight-15,histogramFrame,displayColor,5,True,label,fontScale=0.38)
     return(histogramFrame,boxMask,c12Mask,c34Mask)
        
-def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],refList=["RF1"]):
+def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],refList=["RF1"],swatchList=[]):
     frameForDrawing=np.copy(frame)
     frameStats=np.zeros((16,2,len(roiList)))    
+    swatchStats=np.zeros((16,2,len(swatchList)))    
     referenceColorStats=np.zeros((16,len(refList))) 
     if dictSet['flg rf'][0]==1:
         rotImage,frameForDrawing = RegisterImageColorCard(frame,frameForDrawing,dictSet)
@@ -737,9 +738,16 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
                     x,y,w,h = cv2.boundingRect(resMask)
                 #displayFrame=OpenCVComposite(resRGB[x:x+w,y:y+h,:], displayFrame, dictSet[roiSetName+' cs'])
                     displayFrame=OpenCVComposite(resRGB[y:y+h,x:x+w,:], displayFrame, dictSet[roiSetName+' cs'])
+        for swatchName,swatchNumber in zip(swatchList,range(len(swatchList))):
+            valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,swatchName,dictSet,connectedOnly=1)
+            cv2.rectangle(rotForDrawing,(dictSet[swatchName+' xy'][0],dictSet[swatchName+' xy'][1]),(dictSet[swatchName+' xy'][0]+dictSet[swatchName+' wh'][0],dictSet[swatchName+' xy'][1]+dictSet[swatchName+' wh'][1]),(0,0,255),10 )
+            swatchStats[0:12,0,swatchNumber]=valSummary
+            swatchStats[0:12,1,swatchNumber]=stdSummary
+            area=cv2.countNonZero(resMask)
+            swatchStats[12,0,swatchNumber]=area               
     else:
         rgbCLR=[[0]]
-    return frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR
+    return frameStats,referenceColorStats,swatchStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR
 
 def ToggleFlag(flagName,dictSet):
     if dictSet[flagName][0]==1:
@@ -1328,6 +1336,9 @@ while frameNumber<=totalFrames:
     refSwatchX=[]
     refSwatchY=[]
     refSwatchVal=[]
+    width=0
+    height=0
+    swatchList=[]
     for setRow,setting in zip(range(len(dictSet)),sorted(dictSet)):
         if (setting[0:2]=="RS") & (setting[4:6]=="cr"):
             if (dictSet[setting][0]!=0) & (dictSet[setting][1]!=0):
@@ -1339,6 +1350,10 @@ while frameNumber<=totalFrames:
         if (setting[0:2]=="RS") & (setting[4:6]=="wh"):
             width=dictSet[setting][0]
             height=dictSet[setting][1]
+        if (setting[0:2]=="RS") & (setting[4:6]=="ll"):
+                lowerLimitSwatch=dictSet[setting]
+        if (setting[0:2]=="RS") & (setting[4:6]=="ul"):
+                upperLimitSwatch=dictSet[setting]
         if (setting[0:2]=="RS") & (setting[4:6]=="xy"):
             xStart=dictSet[setting][0]
             yStart=dictSet[setting][1]
@@ -1352,11 +1367,23 @@ while frameNumber<=totalFrames:
                     refSwatchVal.append(val)
     refSwatchWidth=width
     refSwatchHeight=height
+    
+    if len(refSwatchVal)>0:    
+        for swatchX,swatchY,swatchVal,swatchNum in zip(refSwatchX,refSwatchY,refSwatchVal, range(len(refSwatchVal))):
+            swatchTag="S"+"{:02d}".format(swatchNum+1)
+            swatchList.append(swatchTag)
+            dictSet.update({swatchTag+" xy": [swatchX,swatchY]})
+            dictSet.update({swatchTag+" wh": [width,height]})
+            dictSet.update({swatchTag+" vl": [swatchVal]})
+            dictSet.update({swatchTag+" ll": lowerLimitSwatch})
+            dictSet.update({swatchTag+" ul": upperLimitSwatch})
                                          
     if dictSet['flg pf'][0]!=0:
-        frameStats,referenceColorStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList)
+        frameStats,referenceColorStats,swatchStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList,swatchList=swatchList)
         parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
         parameterStats[0:16,2:referenceColorStats.shape[1]+2,frameIndex,0]=referenceColorStats
+#        parameterStats[0:16,referenceColorStats.shape[1]+1:referenceColorStats.shape[1]+1+swatchStats.shape[1]+2,frameIndex,0]=referenceColorStats
+#       need to find a way to keep swatchStats for color matching
         parameterStats[16,0,frameIndex,:]=mass
         for signal,index in zip(sgList,range(len(sgList))):
             setingIndexer1=dictSet['SG'+str(index+1)+' c1']
@@ -1520,8 +1547,9 @@ if (saveSettings=="Y") | (saveSettings=="y"):
     sortedDictSet = sorted(dictSet)
     outString = '{' + "\n"
     for key in sorted(dictSet.keys()) :
-        concatString = "'" + key + "'" + ':' + str(dictSet[key]) + ',' + "\n"
-        outString = outString + concatString
+        if key[0]!="S":
+            concatString = "'" + key + "'" + ':' + str(dictSet[key]) + ',' + "\n"
+            outString = outString + concatString
     outString = outString + '}'    
     print(outString)
     settingsFile.write(outString)
