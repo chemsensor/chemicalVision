@@ -745,6 +745,8 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
             swatchStats[0:12,1,swatchNumber]=stdSummary
             area=cv2.countNonZero(resMask)
             swatchStats[12,0,swatchNumber]=area               
+            swatchStats[13,0,swatchNumber]=dictSet[swatchName+' vl'][0]               
+            swatchStats[14,0,swatchNumber]=dictSet[swatchName+' vl'][1]                
     else:
         rgbCLR=[[0]]
     return frameStats,referenceColorStats,swatchStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR
@@ -1190,6 +1192,7 @@ else:
     totalFrames=10000
 
 totalIndex=int(totalFrames/dictSet['set fr'][0])
+standardSwatchStats=np.zeros((16,2,totalIndex+dictSet['set fr'][0],42))
 parameterStats=np.zeros((32,8,totalIndex+dictSet['set fr'][0],5))
 if totalFrames==1:
     grabbedStats=np.zeros((32,8,100,5))
@@ -1336,6 +1339,7 @@ while frameNumber<=totalFrames:
     refSwatchX=[]
     refSwatchY=[]
     refSwatchVal=[]
+    refSwatchPad=[]
     width=0
     height=0
     swatchList=[]
@@ -1365,24 +1369,25 @@ while frameNumber<=totalFrames:
                     refSwatchX.append(x)
                     refSwatchY.append(y)
                     refSwatchVal.append(val)
+                    refSwatchPad.append(row)
     refSwatchWidth=width
     refSwatchHeight=height
     
     if len(refSwatchVal)>0:    
-        for swatchX,swatchY,swatchVal,swatchNum in zip(refSwatchX,refSwatchY,refSwatchVal, range(len(refSwatchVal))):
-            swatchTag="S"+"{:02d}".format(swatchNum+1)
+        for swatchX,swatchY,swatchVal,swatchNum,swatchPad in zip(refSwatchX,refSwatchY,refSwatchVal, range(len(refSwatchVal)),refSwatchPad):
+            swatchTag="X"+"{:02d}".format(swatchNum+1)
             swatchList.append(swatchTag)
             dictSet.update({swatchTag+" xy": [swatchX,swatchY]})
             dictSet.update({swatchTag+" wh": [width,height]})
-            dictSet.update({swatchTag+" vl": [swatchVal]})
+            dictSet.update({swatchTag+" vl": [swatchVal,swatchPad]})
             dictSet.update({swatchTag+" ll": lowerLimitSwatch})
             dictSet.update({swatchTag+" ul": upperLimitSwatch})
                                          
     if dictSet['flg pf'][0]!=0:
         frameStats,referenceColorStats,swatchStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList,swatchList=swatchList)
         parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
-        parameterStats[0:16,2:referenceColorStats.shape[1]+2,frameIndex,0]=referenceColorStats
-#        parameterStats[0:16,referenceColorStats.shape[1]+1:referenceColorStats.shape[1]+1+swatchStats.shape[1]+2,frameIndex,0]=referenceColorStats
+        parameterStats[0:16,2:referenceColorStats.shape[1]+2,frameIndex,0]=referenceColorStats        
+        standardSwatchStats[0:16,0:2,frameIndex,:]=swatchStats
 #       need to find a way to keep swatchStats for color matching
         parameterStats[16,0,frameIndex,:]=mass
         for signal,index in zip(sgList,range(len(sgList))):
@@ -1547,7 +1552,7 @@ if (saveSettings=="Y") | (saveSettings=="y"):
     sortedDictSet = sorted(dictSet)
     outString = '{' + "\n"
     for key in sorted(dictSet.keys()) :
-        if key[0]!="S":
+        if key[0]!="X":
             concatString = "'" + key + "'" + ':' + str(dictSet[key]) + ',' + "\n"
             outString = outString + concatString
     outString = outString + '}'    
