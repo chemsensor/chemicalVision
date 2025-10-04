@@ -22,7 +22,7 @@ for padNumber in padList:
         axes[int(padNumber),col].plot(pHs[padMask],standardSwatchStats[cc+1,0,0,:][padMask],'-og')
         axes[int(padNumber),col].plot(pHs[padMask],standardSwatchStats[cc+2,0,0,:][padMask],'-ob')
 
-#for Lab color space initial cc is 6
+#for LAB color space initial cc is 6
 refLAB=standardSwatchStats[6:9,0,0,:]
 samLAB=parameterStats[6:9,0,0,0:3]
 pads=standardSwatchStats[14,0,0,:]
@@ -42,3 +42,40 @@ for pad in range(numPads):
 fig,ax=plt.subplots()
 ax.plot(pHrefs,distances)
 
+#for RGB color space initial cc is 0
+refLAB=standardSwatchStats[0:3,0,0,:]
+samLAB=parameterStats[0:3,0,0,0:3]
+pads=standardSwatchStats[14,0,0,:]
+numPads=samLAB.shape[1]
+numRefsPads=refLAB.shape[1]
+numRefs=int(numRefsPads/numPads)
+distances=np.zeros((numRefs))
+pHrefs=np.zeros((numRefs))
+for pad in range(numPads):
+    cc1=samLAB[:,pad]
+    padMask=pad==pads
+    refSamePad=refLAB[:,padMask]
+    for ref in range(numRefs):
+        cc2=refSamePad[:,ref]
+        distances[ref]=distances[ref]+EuclidianDistance(cc1,cc2)
+        pHrefs[ref]=pHs[padMask][ref]
+ax.plot(pHrefs,distances)
+
+#for HSV color space initial cc is 3
+refLAB=standardSwatchStats[3:6,0,0,:]
+samLAB=parameterStats[3:6,0,0,0:3]
+pads=standardSwatchStats[14,0,0,:]
+numPads=samLAB.shape[1]
+numRefsPads=refLAB.shape[1]
+numRefs=int(numRefsPads/numPads)
+distances=np.zeros((numRefs))
+pHrefs=np.zeros((numRefs))
+for pad in range(numPads):
+    cc1=samLAB[:,pad]
+    padMask=pad==pads
+    refSamePad=refLAB[:,padMask]
+    for ref in range(numRefs):
+        cc2=refSamePad[:,ref]
+        distances[ref]=distances[ref]+EuclidianDistance(cc1,cc2)
+        pHrefs[ref]=pHs[padMask][ref]
+ax.plot(pHrefs,distances)
