@@ -141,7 +141,7 @@ for chan in range(256):
 root = tk.Tk()
 root.withdraw()
 root.wm_attributes('-topmost', 1)
-video_file_path = askopenfilename(initialdir=filePathImage,filetypes=[('image files', '*.jpg | *.jpeg | *.png'),('video files', '*.mp4 | *.mkv | *.avi | *.MOV'),('all files', '.*')])
+video_file_path = askopenfilename(initialdir=filePathImage,filetypes=[('image files', '*.jpg | *.jpeg | *.png | q*.JPG | *.JPEG | *.PNG'),('video files', '*.mp4 | *.mkv | *.avi | *.MOV'),('all files', '.*')])
 if len(video_file_path)!=0:
     video_file_pathSplit = os.path.split(video_file_path)
     video_file_dir=video_file_pathSplit[0]
