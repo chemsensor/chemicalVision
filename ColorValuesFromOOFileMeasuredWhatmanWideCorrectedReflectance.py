@@ -69,7 +69,7 @@ for pHValue in pHValues:
 WavelengthArray=OOFileDF.values[:,0]
 
 refRange=((WavelengthArray>800) & (WavelengthArray<850))
-TargetReflectance=75
+TargetReflectance=80
 if TargetReflectance!=0:
     CorrectedReflectanceArray=np.copy(ReflectanceArray)
     TrialFig,CorrectedAxes=plt.subplots(2,len(padValues),sharex=True,sharey=True)
@@ -196,27 +196,3 @@ for pad in range(len(padValues)):
             TrialAxes[pH,pad].plot(WavelengthArray,AbsorbanceArray[pH,pad,trial,:],label="ph"+str(pHs[pH])+' tr'+str(trialValues[trial]))
     TrialAxes[0,pad].set_xlim([360, 880])
     TrialAxes[0,pad].set_ylim([0, 2])
-    
-CCFig,CCaxes=plt.subplots(3,len(padValues),sharex=True,sharey=True)
-for pad in range(len(padValues)):
-        CCaxes[0,pad].plot(pHs,ColorArray[:,pad,0],'-or',label=str(pHs[pH]))
-        CCaxes[0,pad].plot(pHs,ColorArray[:,pad,1],'-og')
-        CCaxes[0,pad].plot(pHs,ColorArray[:,pad,2],'-ob')
-        CCaxes[1,pad].plot([11.0,10.5,10.0,9.5,9.0,8.5,8.0,7.5,7.0,6.5,6.0,5.5,5.0,4.5,4.0],InColorArray[:,pad,0],'-or')
-        CCaxes[1,pad].plot([11.0,10.5,10.0,9.5,9.0,8.5,8.0,7.5,7.0,6.5,6.0,5.5,5.0,4.5,4.0],InColorArray[:,pad,1],'-og')
-        CCaxes[1,pad].plot([11.0,10.5,10.0,9.5,9.0,8.5,8.0,7.5,7.0,6.5,6.0,5.5,5.0,4.5,4.0],InColorArray[:,pad,2],'-ob')
-#        CCaxes[2,pad].plot([11.0,10.5,10.0,9.5,9.0,8.5,8.0,7.5,7.0,6.5,6.0,5.5,5.0,4.5,4.0],PhotoColorArray[:,pad,0],'-or')
-#        CCaxes[2,pad].plot([11.0,10.5,10.0,9.5,9.0,8.5,8.0,7.5,7.0,6.5,6.0,5.5,5.0,4.5,4.0],PhotoColorArray[:,pad,1],'-og')
-#        CCaxes[2,pad].plot([11.0,10.5,10.0,9.5,9.0,8.5,8.0,7.5,7.0,6.5,6.0,5.5,5.0,4.5,4.0],PhotoColorArray[:,pad,2],'-ob')
-        CCaxes[0,pad].set_xlim([0, 14])
-        CCaxes[0,pad].set_ylim([0, 255])
-        CCaxes[1,pad].set_xlim([0, 14])
-        CCaxes[1,pad].set_ylim([0, 255]) 
-        CCaxes[2,pad].set_xlim([0, 14])
-        CCaxes[2,pad].set_ylim([0, 255]) 
-
-LabFig,Labaxes=plt.subplots(3,len(padValues),sharex=True,sharey=True)
-for pad in range(len(padValues)):
-        Labaxes[0,pad].plot(pHs,ColorArray[:,pad,3],'-ok',label=str(pHs[pH]))
-        Labaxes[0,pad].plot(pHs,ColorArray[:,pad,4],'-om')
-        Labaxes[0,pad].plot(pHs,ColorArray[:,pad,5],'-oy')
