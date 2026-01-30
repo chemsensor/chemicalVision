@@ -13,9 +13,20 @@ numWaves=1560
 #C:\Users\Public\Dropbox\Su15 Color\OOData\05_31_16\Convert
 #OODirectory='C:\Users\Kevin\Dropbox\Su15 Color\OOData\Convert'
 #OODirectory=r'C:\Users\Public\Dropbox\Su15 Color\OOData\\05_31_16\Convert'
-#OODirectory=r'C:\Users\Kevin\Dropbox\Su15 Color\OOData\\05_31_16\Convert'
-OODirectory=r'/home/kevin/UofP Dropbox/Kevin Cantrell/Su15 Color/OOData/05_31_16/Convert'
-OOFileNameA=r'/WhatWide'
+
+#Windows
+OODirectory=r'C:\Users\cantrell\UofP Dropbox\Kevin Cantrell\Su15 Color\OOData\05_31_16\Convert'
+OOFileNameA=r'\WhatWide'
+EXFileName= r'C:\Users\cantrell\UofP Dropbox\Kevin Cantrell\Su15 Color\WhatmanValuesRef2.csv'
+XLFile = r'C:\Users\cantrell\UofP Dropbox\Kevin Cantrell\Su15 Color\OOData\all_1nm_data.xls'
+
+#Linux
+#OODirectory=r'/home/kevin/UofP Dropbox/Kevin Cantrell/Su15 Color/OOData/05_31_16/Convert'
+#OOFileNameA=r'/WhatWide'
+#EXFileName= r'/home/kevin/UofP Dropbox/Kevin Cantrell/Su15 Color/WhatmanValuesRef2.csv'
+#XLFile = pd.read_excel('C:\Users\Public\Dropbox\Su15 Color\OOData\\all_1nm_data.xls',skiprows=63)
+#XLFile = r'/home/kevin/UofP Dropbox/Kevin Cantrell/Su15 Color/OOData/all_1nm_data.xls'
+
 OOFileNameB='_pH'
 OOFileNameC='_'
 OOFileNameD='_pad'
@@ -84,10 +95,7 @@ if TargetReflectance!=0:
     
 AbsorbanceArray=-np.log10(ReflectanceArray/100.0)
 
-
 InColorArray=np.zeros((15,5,3))
-#EXFileName= r'C:\Users\Public\Dropbox\Su15 Color\WhatmanValuesRef2.csv'
-EXFileName= r'/home/kevin/UofP Dropbox/Kevin Cantrell/Su15 Color/WhatmanValuesRef2.csv'
 EXFileDF=pd.read_csv(EXFileName)
 for pad in range(5):
     for pHValue in range(15):
@@ -100,8 +108,7 @@ for pad in range(5):
 #    for pHValue in range(15):
 #        PhotoColorArray[pHValue,pad,:]=EXFileDF.values[(pad*15)+pHValue,1:4]
 
-#XLFileDF = pd.read_excel('C:\Users\Public\Dropbox\Su15 Color\OOData\\all_1nm_data.xls',skiprows=63)
-XLFileDF = pd.read_excel(r'~/UofP Dropbox/Kevin Cantrell/Su15 Color/OOData/all_1nm_data.xls',skiprows=63)
+XLFileDF = pd.read_excel(XLFile,skiprows=63)
 CIEX=interpolateResponse(WavelengthArray, XLFileDF.values[:,0],XLFileDF.values[:,5])
 CIEY=interpolateResponse(WavelengthArray, XLFileDF.values[:,0],XLFileDF.values[:,6])
 CIEZ=interpolateResponse(WavelengthArray, XLFileDF.values[:,0],XLFileDF.values[:,7])
