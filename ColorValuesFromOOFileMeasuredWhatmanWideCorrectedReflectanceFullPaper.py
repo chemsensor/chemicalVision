@@ -150,17 +150,25 @@ for pH in range(len(pHValues)):
         ColorArray[pH,pad,3]=L
         ColorArray[pH,pad,4]=A
         ColorArray[pH,pad,5]=B
-        
-stripinc=92
-padinc=100
-stripstart=256
-padstart=260
-circler=40
-
-paperWidth=1800
-paperHeight=1200
+#for 8.5 by 11        
+paperWidth=int(11*300)
+paperHeight=int(8.5*300)
 borderMargin=300
 numberSwatches=15
+
+#for 4 by 6        
+#paperWidth=int(6*300)
+#paperHeight=int(4*300)
+#borderMargin=200
+#numberSwatches=15
+
+#stripinc=92
+#padinc=100
+#stripstart=256
+#padstart=260
+#circler=60
+
+
 
 whiteBorder=np.uint(borderMargin/10)
 regCircleRad=np.uint(borderMargin/4)
@@ -168,6 +176,12 @@ circlePad=np.uint(borderMargin/2+whiteBorder/2)
 refSwatchSpacing=np.uint((paperHeight-borderMargin)/numberSwatches)
 refSwatchDimension=np.uint((paperHeight-borderMargin)/(numberSwatches*1.5))
 swatchMargin=np.uint(borderMargin/10)
+stripinc=int(regCircleRad*2.2)
+padinc=stripinc
+stripstart=borderMargin+circlePad
+padstart=borderMargin
+circler=regCircleRad
+
 ReferenceImage = np.full((paperHeight,paperWidth, 3), 255,np.uint8)
 
 #cyan border
@@ -191,8 +205,18 @@ cv2.circle(ReferenceImage,(paperWidth-circlePad,paperHeight-circlePad), regCircl
 circleText="Y:("+str(circlePad)+","+str(circlePad)+")("+str(circlePad)+","+str(paperHeight-circlePad)+")"
 
 #box for pH strip
-cv2.rectangle(ReferenceImage,(370,770), (1382,893), (255,0,255), 50)
-cv2.rectangle(ReferenceImage,(415,790), (475,873), (0,0,0), -1)
+#cv2.rectangle(ReferenceImage,(370,770), (1382,893), (255,0,255), 50)
+#cv2.rectangle(ReferenceImage,(415,790), (475,873), (0,0,0), -1)
+boxWide=int(8.6/2.54*300)
+boxHigh=int(0.55/2.54*300)
+boxLine=50
+cv2.rectangle(ReferenceImage,(borderMargin+circlePad,int(paperHeight/2.5)), (borderMargin+circlePad+boxWide+boxLine,int(paperHeight/2.5)+boxHigh+boxLine), (255,0,255), boxLine)
+
+#box for Whatman reference which is 12.7 cm by 7 cm
+boxWide=int(12.7/2.54*300)
+boxHigh=int(7/2.54*300)
+cv2.rectangle(ReferenceImage,(borderMargin+circlePad,int(paperHeight/2)), (borderMargin+circlePad+boxWide+boxLine,int(paperHeight/2)+boxHigh+boxLine), (0,255,255), boxLine)
+
 
 circleText=circleText+"; M:("+str(paperWidth-circlePad)+","+str(circlePad)+")("+str(paperWidth-circlePad)+","+str(paperHeight-circlePad)+")"
 cv2.putText(ReferenceImage, circleText, (borderMargin*3,paperHeight-borderMargin-swatchMargin), font, 1,(0,0,0),1,cv2.LINE_AA)
