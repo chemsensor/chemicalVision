@@ -1386,8 +1386,9 @@ while frameNumber<=totalFrames:
     if dictSet['flg pf'][0]!=0:
         frameStats,referenceColorStats,swatchStats,displayFrame,frame,frameForDrawing,rotImage,rotForDrawing,rgbCLR = ProcessOneFrame(frame,dictSet,displayFrame,wbList=wbList,roiList=roiList,refList=refList,swatchList=swatchList)
         parameterStats[0:16,0:2,frameIndex,0:frameStats.shape[2]]=frameStats
-        parameterStats[0:16,2:referenceColorStats.shape[1]+2,frameIndex,0]=referenceColorStats        
-        standardSwatchStats[0:16,0:2,frameIndex,:]=swatchStats
+        parameterStats[0:16,2:referenceColorStats.shape[1]+2,frameIndex,0]=referenceColorStats
+        if np.any(swatchStats)==True:
+            standardSwatchStats[0:16,0:2,frameIndex,:]=swatchStats
 #       need to find a way to keep swatchStats for color matching
         parameterStats[16,0,frameIndex,:]=mass
         for signal,index in zip(sgList,range(len(sgList))):

@@ -52,7 +52,7 @@ def OpenCVDisplayedHistogram(image,channel,mask,NumBins,DataMin,DataMax,x,y,w,h,
         binWidth=1
     #img = np.zeros((h, NumBins*binWidth, 3), np.uint8)
     for i in range(NumBins):
-        freq = int(histdata[i])
+        freq = int(histdata[i].item())
         cv2.rectangle(DisplayImage, ((i*binWidth)+x, y+h), (((i+1)*binWidth)+x, y+h-freq), color)
     if labelFlag:
         cv2.putText(DisplayImage,labelText+" m="+'{0:.2f}'.format(domValue/float(NumBins-1)*(DataMax-DataMin))+" n="+'{:4d}'.format(int(pixelCount))+" a="+'{0:.2f}'.format(avgVal[0][channel][0])+" s="+'{0:.2f}'.format(avgVal[1][channel][0]),(x,y+h+12), font, fontScale,color,1,cv2.LINE_AA)

@@ -210,12 +210,12 @@ circleText="Y:("+str(circlePad)+","+str(circlePad)+")("+str(circlePad)+","+str(p
 boxWide=int(8.6/2.54*300)
 boxHigh=int(0.55/2.54*300)
 boxLine=50
-cv2.rectangle(ReferenceImage,(borderMargin+circlePad,int(paperHeight/2.5)), (borderMargin+circlePad+boxWide+boxLine,int(paperHeight/2.5)+boxHigh+boxLine), (255,0,255), boxLine)
+cv2.rectangle(ReferenceImage,(borderMargin+circlePad,int(paperHeight/2.5)), (borderMargin+circlePad+boxWide+boxLine,int(paperHeight/2.5)+boxHigh+boxLine), (128,128,128), boxLine)
 
 #box for Whatman reference which is 12.7 cm by 7 cm
 boxWide=int(12.7/2.54*300)
 boxHigh=int(7/2.54*300)
-cv2.rectangle(ReferenceImage,(borderMargin+circlePad,int(paperHeight/2)), (borderMargin+circlePad+boxWide+boxLine,int(paperHeight/2)+boxHigh+boxLine), (0,255,255), boxLine)
+cv2.rectangle(ReferenceImage,(borderMargin+circlePad,int(paperHeight/2)), (borderMargin+circlePad+boxWide+boxLine,int(paperHeight/2)+boxHigh+boxLine), (128,128,128), boxLine)
 
 
 circleText=circleText+"; M:("+str(paperWidth-circlePad)+","+str(circlePad)+")("+str(paperWidth-circlePad)+","+str(paperHeight-circlePad)+")"
