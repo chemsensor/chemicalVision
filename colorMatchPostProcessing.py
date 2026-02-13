@@ -14,7 +14,7 @@ def EuclidianDistance(cc1,cc2):
 pads=standardSwatchStats[14,0,0,:]
 pHs=standardSwatchStats[13,0,0,:]
 padList=set(pads)
-fig,axes=plt.subplots(3,3,sharex=True,sharey=True)
+fig,axes=plt.subplots(4,3,sharex=True,sharey=True)
 for padNumber in padList:
     padMask=padNumber==standardSwatchStats[14,0,0,:]
     for cc,col in zip([0,3,6],[0,1,2]):
@@ -24,7 +24,7 @@ for padNumber in padList:
 
 #for LAB color space initial cc is 6
 refLAB=standardSwatchStats[6:9,0,0,:]
-samLAB=parameterStats[6:9,0,0,0:3]
+samLAB=parameterStats[6:9,0,0,0:4]
 pads=standardSwatchStats[14,0,0,:]
 numPads=samLAB.shape[1]
 numRefsPads=refLAB.shape[1]
@@ -44,7 +44,7 @@ ax.plot(pHrefs,distances)
 
 #for RGB color space initial cc is 0
 refLAB=standardSwatchStats[0:3,0,0,:]
-samLAB=parameterStats[0:3,0,0,0:3]
+samLAB=parameterStats[0:3,0,0,0:4]
 pads=standardSwatchStats[14,0,0,:]
 numPads=samLAB.shape[1]
 numRefsPads=refLAB.shape[1]
@@ -63,7 +63,7 @@ ax.plot(pHrefs,distances)
 
 #for HSV color space initial cc is 3
 refLAB=standardSwatchStats[3:6,0,0,:]
-samLAB=parameterStats[3:6,0,0,0:3]
+samLAB=parameterStats[3:6,0,0,0:4]
 pads=standardSwatchStats[14,0,0,:]
 numPads=samLAB.shape[1]
 numRefsPads=refLAB.shape[1]
