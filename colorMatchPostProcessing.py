@@ -14,13 +14,18 @@ def EuclidianDistance(cc1,cc2):
 pads=standardSwatchStats[14,0,0,:]
 pHs=standardSwatchStats[13,0,0,:]
 padList=set(pads)
-fig,axes=plt.subplots(4,3,sharex=True,sharey=True)
+samLAB=parameterStats[6:9,0,0,0:4]
+fig,axes=plt.subplots(len(padList),1,sharex=True,sharey=True)
+cc=6
 for padNumber in padList:
     padMask=padNumber==standardSwatchStats[14,0,0,:]
-    for cc,col in zip([0,3,6],[0,1,2]):
-        axes[int(padNumber),col].plot(pHs[padMask],standardSwatchStats[cc,0,0,:][padMask],'-or')
-        axes[int(padNumber),col].plot(pHs[padMask],standardSwatchStats[cc+1,0,0,:][padMask],'-og')
-        axes[int(padNumber),col].plot(pHs[padMask],standardSwatchStats[cc+2,0,0,:][padMask],'-ob')
+    axes[int(padNumber)].plot(pHs[padMask],standardSwatchStats[cc,0,0,:][padMask],'-ok')
+    axes[int(padNumber)].plot(pHs[padMask],standardSwatchStats[cc+1,0,0,:][padMask],'-om')
+    axes[int(padNumber)].plot(pHs[padMask],standardSwatchStats[cc+2,0,0,:][padMask],'-oy')
+    axes[int(padNumber)].plot([0,14],[samLAB[0,int(padNumber)],samLAB[0,int(padNumber)]],':k')
+    axes[int(padNumber)].plot([0,14],[samLAB[1,int(padNumber)],samLAB[1,int(padNumber)]],':m')
+    axes[int(padNumber)].plot([0,14],[samLAB[2,int(padNumber)],samLAB[2,int(padNumber)]],':y')
+
 
 #for LAB color space initial cc is 6
 refLAB=standardSwatchStats[6:9,0,0,:]
@@ -42,6 +47,8 @@ for pad in range(numPads):
 fig,ax=plt.subplots()
 ax.plot(pHrefs,distances)
 
+closestIndex=np.argmin(distances)
+closest_pH=pHrefs[closestIndex]
 #for RGB color space initial cc is 0
 refLAB=standardSwatchStats[0:3,0,0,:]
 samLAB=parameterStats[0:3,0,0,0:4]
