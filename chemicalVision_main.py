@@ -1338,6 +1338,8 @@ while frameNumber<=totalFrames:
                 
     refSwatchX=[]
     refSwatchY=[]
+    refSwatchW=[]
+    refSwatchH=[]
     refSwatchVal=[]
     refSwatchPad=[]
     width=0
@@ -1368,17 +1370,19 @@ while frameNumber<=totalFrames:
                     val=valStart+(valIncrement*col)
                     refSwatchX.append(x)
                     refSwatchY.append(y)
+                    refSwatchW.append(width)
+                    refSwatchH.append(height)
                     refSwatchVal.append(val)
                     refSwatchPad.append(row)
-    refSwatchWidth=width
-    refSwatchHeight=height
+    #refSwatchWidth=width
+    #refSwatchHeight=height
     
     if len(refSwatchVal)>0:    
-        for swatchX,swatchY,swatchVal,swatchNum,swatchPad in zip(refSwatchX,refSwatchY,refSwatchVal, range(len(refSwatchVal)),refSwatchPad):
+        for swatchX,swatchY,swatchW,swatchH,swatchVal,swatchNum,swatchPad in zip(refSwatchX,refSwatchY,refSwatchW,refSwatchH,refSwatchVal, range(len(refSwatchVal)),refSwatchPad):
             swatchTag="X"+"{:02d}".format(swatchNum+1)
             swatchList.append(swatchTag)
             dictSet.update({swatchTag+" xy": [swatchX,swatchY]})
-            dictSet.update({swatchTag+" wh": [width,height]})
+            dictSet.update({swatchTag+" wh": [swatchW,swatchH]})
             dictSet.update({swatchTag+" vl": [swatchVal,swatchPad]})
             dictSet.update({swatchTag+" ll": lowerLimitSwatch})
             dictSet.update({swatchTag+" ul": upperLimitSwatch})
