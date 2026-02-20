@@ -1192,7 +1192,7 @@ else:
     totalFrames=10000
 
 totalIndex=int(totalFrames/dictSet['set fr'][0])
-standardSwatchStats=np.zeros((16,2,totalIndex+dictSet['set fr'][0],60))
+standardSwatchStats=np.zeros((16,2,totalIndex+dictSet['set fr'][0],124))
 parameterStats=np.zeros((32,8,totalIndex+dictSet['set fr'][0],5))
 if totalFrames==1:
     grabbedStats=np.zeros((32,8,100,5))
