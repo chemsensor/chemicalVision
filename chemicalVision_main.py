@@ -1379,7 +1379,7 @@ while frameNumber<=totalFrames:
     
     if len(refSwatchVal)>0:    
         for swatchX,swatchY,swatchW,swatchH,swatchVal,swatchNum,swatchPad in zip(refSwatchX,refSwatchY,refSwatchW,refSwatchH,refSwatchVal, range(len(refSwatchVal)),refSwatchPad):
-            swatchTag="X"+"{:02d}".format(swatchNum+1)
+            swatchTag="x"+"{:02d}".format(swatchNum+1)
             swatchList.append(swatchTag)
             dictSet.update({swatchTag+" xy": [swatchX,swatchY]})
             dictSet.update({swatchTag+" wh": [swatchW,swatchH]})
