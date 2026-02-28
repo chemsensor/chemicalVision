@@ -1567,7 +1567,7 @@ if (saveSettings=="Y") | (saveSettings=="y"):
     sortedDictSet = sorted(dictSet)
     outString = '{' + "\n"
     for key in sorted(dictSet.keys()) :
-        if key[0]!="X":
+        if (key[0]!="X") or (key[0]!="x"):
             concatString = "'" + key + "'" + ':' + str(dictSet[key]) + ',' + "\n"
             outString = outString + concatString
     outString = outString + '}'    
@@ -1646,45 +1646,116 @@ if dictSet['flg hb'][0]==2:
         dfTargetCDFs = pd.DataFrame({'BlueHist':tgt_cdfB, 'GreenHist':tgt_cdfG, 'RedHist':tgt_cdfR})
         dfTargetCDFs.to_csv(data_file_path, index=False)
 
+cv2.imshow('Display', displayFrame)
+
 for startIndex,endIndex in zip([0,60],[60,124]):       
     pads=standardSwatchStats[14,0,0,startIndex:endIndex]
     pHs=standardSwatchStats[13,0,0,startIndex:endIndex]
     padList=set(pads)
-    samLAB=parameterStats[7:9,0,0,0:4]
     fig,axes=plt.subplots(len(padList),1,sharex=True,sharey=True)
-    cc=7
+    startCC=7
+    endCC=9 #note: 1 larger than actual channel#
+    unkData=parameterStats[startCC:endCC,0,0,0:4]
     for padNumber in padList:
         padMask=padNumber==standardSwatchStats[14,0,0,startIndex:endIndex]
-        axes[int(padNumber)].plot(pHs[padMask],standardSwatchStats[cc,0,0,startIndex:endIndex][padMask],'-ok')
-        axes[int(padNumber)].plot(pHs[padMask],standardSwatchStats[cc+1,0,0,startIndex:endIndex][padMask],'-om')
-        #axes[int(padNumber)].plot(pHs[padMask],standardSwatchStats[cc+2,0,0,startIndex:endIndex][padMask],'-oy')
-        axes[int(padNumber)].plot([0,14],[samLAB[0,int(padNumber)],samLAB[0,int(padNumber)]],':k')
-        axes[int(padNumber)].plot([0,14],[samLAB[1,int(padNumber)],samLAB[1,int(padNumber)]],':m')
-        #axes[int(padNumber)].plot([0,14],[samLAB[2,int(padNumber)],samLAB[2,int(padNumber)]],':y')
-    
-    
-    #for LAB color space initial cc is 6
-    refLAB=standardSwatchStats[7:9,0,0,startIndex:endIndex]
-    samLAB=parameterStats[7:9,0,0,0:4]
+        for cc in range(startCC,endCC):
+            axes[int(padNumber)].plot(pHs[padMask],standardSwatchStats[cc,0,0,startIndex:endIndex][padMask])
+        axes[int(padNumber)].plot( [0,14] , [unkData[:,int(padNumber)],unkData[:,int(padNumber)]],linestyle='dashed')
+    totalDistance=np.zeros(len(pHs))
+    refData=standardSwatchStats[startCC:endCC,0,0,startIndex:endIndex]
     pads=standardSwatchStats[14,0,0,startIndex:endIndex]
-    numPads=samLAB.shape[1]
-    numRefsPads=refLAB.shape[1]
+    numPads=unkData.shape[1]
+    numRefsPads=refData.shape[1]
     numRefs=int(numRefsPads/numPads)
-    distances=np.zeros((numRefs))
+    distance=np.zeros((numRefs))
     pHrefs=np.zeros((numRefs))
     for pad in range(numPads):
-        cc1=samLAB[:,pad]
+        cc1=unkData[:,pad]
         padMask=pad==pads
-        refSamePad=refLAB[:,padMask]
+        refSamePad=refData[:,padMask]
         for ref in range(numRefs):
             cc2=refSamePad[:,ref]
-            distances[ref]=distances[ref]+EuclidianDistance(cc1,cc2)
+            distance[ref]=distance[ref]+EuclidianDistance(cc1,cc2)
             pHrefs[ref]=pHs[padMask][ref]
     fig,ax=plt.subplots()
-    ax.plot(pHrefs,distances)
-    
-    closestIndex=np.argmin(distances)
+    ax.plot(pHrefs,distance)
+        
+    closestIndex=np.argmin(distance)
     closest_pH=pHrefs[closestIndex]
+
+
+    EuclidDist=np.zeros((numPads,100,2))
+    Dstk=np.zeros((200))
+    if (closestIndex-1)>=0 and (closestIndex+1)<=14:
+        for std in range(2):
+            for travel in range(100):
+                for pad in range(4):
+                        X0=unkData[:,pad]
+                        padMask=pad==pads
+                        refSamePad=refData[:,padMask]
+                        X1=refSamePad[:,closestIndex-1+std]
+                        X2=refSamePad[:,closestIndex+std]
+                        tu=travel/100.0
+                        X3=X1+((X2-X1)*tu)
+                        EuclidDist[pad,travel,std]=np.linalg.norm(X3-X0)
+            Dstk[0+(std*100):100+(std*100)]=np.sum(EuclidDist,0)[:,std]
+        pGlob=(pHrefs[closestIndex+1]-pHrefs[closestIndex-1])*np.argmin(Dstk)/200.0+pHrefs[closestIndex-1]
+        pGlobED=np.min(Dstk)
+        print("Best="+str(pGlob)+"(d="+str(np.amin(Dstk))+") from "+str(pHrefs[closestIndex-1])+" to "+str(pHrefs[closestIndex+1]))
+    fig,ax=plt.subplots()
+    pHrange=np.linspace(pHrefs[closestIndex-1],pHrefs[closestIndex+1],len(Dstk))
+    ax.plot(pHrange,Dstk)
+    
+    
+    
+"""
+import numpy as np
+
+    channel=1
+    EuclidDist=np.zeros((4,100,2))
+    intPh=np.zeros((4,100,2))
+    DAg=np.zeros((100,2))
+    Dstk=np.zeros((200))
+    if (closestIndex-1)>=0 and (closestIndex+1)<=14:
+        for std in range(2):
+            for travel in range(100):
+                for pad in range(4):
+                        X0=UnknownData[pad,channel:channel+3]
+                        X1=CalibrationData[closestIndex-1+std,pad,channel:channel+3]
+                        X2=CalibrationData[closestIndex+std,pad,channel:channel+3]
+                        #tu=-numpy.dot(X1-X0,X2-X1)/numpy.absolute(numpy.dot(X2-X1,X2-X1))
+                        tu=travel/100.
+                        X3=X1+((X2-X1)*tu)
+                        EuclidDist[pad,travel,std]=numpy.linalg.norm(X3-X0)
+                        intPh[pad,travel,std]=CalibrationData[closestIndex-1+std,0,0]+(CalibrationData[closestIndex+std,0,0]-CalibrationData[closestIndex-1+std,0,0])*tu
+                DAg[:,std]=np.sum(EuclidDist,0)[:,std]   
+            Dstk[0+(std*100):100+(std*100)]=np.sum(EuclidDist,0)[:,std]
+            #plot(arange(100)+(100*std),DAg[:,std])
+            #pInt=(CalibrationData[closestIndex+std,0,0]-CalibrationData[closestIndex-1+std,0,0])*np.argmin(DAg[:,std])/100.0+CalibrationData[closestIndex-1+std,0,0]
+            #print "Best="+str(pInt)+"(d="+str(np.amin(DAg[:,std]))+") from "+str(CalibrationData[closestIndex-1+std,0,0])+" to "+str(CalibrationData[closestIndex+std,0,0])
+        pGlob=(CalibrationData[closestIndex+1,0,0]-CalibrationData[closestIndex-1,0,0])*np.argmin(Dstk)/200.0+CalibrationData[closestIndex-1,0,0]
+        pGlobED=np.amin(Dstk)
+        #print "Best="+str(pGlob)+"(d="+str(np.amin(Dstk))+") from "+str(CalibrationData[closestIndex-1,0,0])+" to "+str(CalibrationData[closestIndex+1,0,0])    
+    
+    # #for RGB color space initial cc is 0
+    # refLAB=standardSwatchStats[0:3,0,0,startIndex:endIndex]
+    # samLAB=parameterStats[0:3,0,0,0:4]
+    # pads=standardSwatchStats[14,0,0,startIndex:endIndex]
+    # numPads=samLAB.shape[1]
+    # numRefsPads=refLAB.shape[1]
+    # numRefs=int(numRefsPads/numPads)
+    # distances=np.zeros((numRefs))
+    # pHrefs=np.zeros((numRefs))
+    # for pad in range(numPads):
+    #     cc1=samLAB[:,pad]
+    #     padMask=pad==pads
+    #     refSamePad=refLAB[:,padMask]
+    #     for ref in range(numRefs):
+    #         cc2=refSamePad[:,ref]
+    #         distances[ref]=distances[ref]+EuclidianDistance(cc1,cc2)
+    #         pHrefs[ref]=pHs[padMask][ref]
+    # ax.plot(pHrefs,distances)
+"""
 # dropSignal=parameterStats[dictSet['CNT yc'][0],dictSet['CNT yc'][1],0:frameIndex,dictSet['CNT yc'][2]]
 # boolDrop=da.hyst(dropSignal, dictSet['CNT hy'][0], dictSet['CNT hy'][1])
 # times,frames=da.crossBoolean(parameterStats[dictSet['CNT xc'][0],dictSet['CNT xc'][1],0:frameIndex,dictSet['CNT xc'][2]], boolDrop, crossPoint=0.5, direction='rising')
