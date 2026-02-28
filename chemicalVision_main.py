@@ -1567,7 +1567,7 @@ if (saveSettings=="Y") | (saveSettings=="y"):
     sortedDictSet = sorted(dictSet)
     outString = '{' + "\n"
     for key in sorted(dictSet.keys()) :
-        if (key[0]!="X") or (key[0]!="x"):
+        if (key[0]!="X") and (key[0]!="x"):
             concatString = "'" + key + "'" + ':' + str(dictSet[key]) + ',' + "\n"
             outString = outString + concatString
     outString = outString + '}'    
