@@ -63,6 +63,67 @@ def interpolateResponse(OOWaves, CIEWaves, X):
             Xout[i]=((Xind[roundedhigh]-Xind[roundedlow])*(OOWaves[i]-roundedlow))+Xind[roundedlow]
     return (Xout)
 
+def ShiftHOriginToValue(hue, maxHue, newOrigin, direction="cw"):
+    shifthsv = np.copy(hue).astype("float")
+    shiftAmount = maxHue - newOrigin
+    shifthsv[hue < newOrigin] = shifthsv[hue < newOrigin] + shiftAmount
+    shifthsv[hue >= newOrigin] = shifthsv[hue >= newOrigin] - newOrigin
+    hue = shifthsv
+    if direction == "ccw":
+        hue = maxHue - hue
+    return hue
+
+def absorbanceToTristim(waves, illum, absorbance, Yr, gammaFlag=True):
+    pixel = np.zeros((1, 1, 3), dtype=np.float32)
+    pixel[0, 0, 0] = np.trapezoid(CIEX * illum * 10 ** -absorbance, waves) / Yr
+    pixel[0, 0, 1] = np.trapezoid(CIEY * illum * 10 ** -absorbance, waves) / Yr
+    pixel[0, 0, 2] = np.trapezoid(CIEZ * illum * 10 ** -absorbance, waves) / Yr
+    XYZ = pixel[0, 0, :]
+    RGB = cv2.cvtColor(pixel, cv2.COLOR_XYZ2RGB)
+    RGBg = np.zeros((RGB.shape), dtype=np.float32)
+    for cc in range(RGB.shape[2]):
+        if RGB[0, 0, cc] <= 0.0031308:
+            RGBg[0, 0, cc] = 12.92 * RGB[0, 0, cc]
+        else:
+            RGBg[0, 0, cc] = 1.055 * RGB[0, 0, cc] ** (1 / 2.4) - 0.055
+        if RGBg[0, 0, cc] > 1:
+            RGBg[0, 0, cc] = 1
+        elif RGBg[0, 0, cc] < 0:
+            RGBg[0, 0, cc] = 0
+    if gammaFlag:
+        HSV = cv2.cvtColor(RGBg, cv2.COLOR_RGB2HSV)[0, 0, :]
+        LAB = cv2.cvtColor(RGBg, cv2.COLOR_RGB2LAB)[0, 0, :]
+        RGB = RGB[0, 0, :]
+        RGBg = RGBg[0, 0, :]
+        rgb = np.zeros((RGBg.shape))
+        rgb[0] = RGBg[0] / np.sum(RGBg)
+        rgb[1] = RGBg[1] / np.sum(RGBg)
+        rgb[2] = RGBg[2] / np.sum(RGBg)
+        rat = np.zeros((RGBg.shape))
+        rat[0] = RGBg[0] / RGBg[1]
+        rat[1] = RGBg[0] / RGBg[2]
+        rat[2] = RGBg[1] / RGBg[2]
+    else:
+        HSV = cv2.cvtColor(RGB, cv2.COLOR_RGB2HSV)[0, 0, :]
+        LAB = cv2.cvtColor(RGB, cv2.COLOR_RGB2LAB)[0, 0, :]
+        RGB = RGB[0, 0, :]
+        RGBg = RGBg[0, 0, :]
+        rgb = np.zeros((RGB.shape))
+        rgb[0] = RGB[0] / np.sum(RGB)
+        rgb[1] = RGB[1] / np.sum(RGB)
+        rgb[2] = RGB[2] / np.sum(RGB)
+        rat = np.zeros((RGB.shape))
+        rat[0] = RGB[0] / RGB[1]
+        rat[1] = RGB[0] / RGB[2]
+        rat[2] = RGB[1] / RGB[2]
+    HSV[0] = ShiftHOriginToValue(HSV[0], 360, 360.0 / 3, direction="ccw")
+    HSV[0] = HSV[0] / 360.0
+    LAB[0] = LAB[0] / 100.0
+    LAB[1] = (LAB[1] + 128) / 255.0
+    LAB[2] = (LAB[2] + 128) / 255.0
+    RGBg = np.rint(RGBg * 255) / 255.0
+    return RGB, HSV, LAB, XYZ, rgb, rat, RGBg
+
 ReflectanceArray=np.zeros((len(pHValues),len(padValues),len(trialValues),numWaves))
 WavelengthArray=np.zeros((numWaves))
 pHs=np.zeros((len(pHValues)))
@@ -124,7 +185,7 @@ Xn=np.trapezoid(CIEX*D65*(1), WavelengthArray)/Yr
 Yn=np.trapezoid(CIEY*D65*(1), WavelengthArray)/Yr
 Zn=np.trapezoid(CIEZ*D65*(1), WavelengthArray)/Yr
 
-ColorArray=np.zeros((len(pHValues),len(padValues),6))
+ColorArray=np.zeros((len(pHValues),len(padValues),9))
 for pH in range(len(pHValues)):
     for pad in range(len(padValues)):
         X=np.trapezoid(CIEX*D65*(np.mean(ReflectanceArray[pH,pad,:,:],axis=0)/100), WavelengthArray)/Yr
@@ -147,9 +208,29 @@ for pH in range(len(pHValues)):
             elif RGBs[cc]<0:
                 RGBs[cc]=0
         ColorArray[pH,pad,0:3]=RGBs
-        ColorArray[pH,pad,3]=L
-        ColorArray[pH,pad,4]=A
-        ColorArray[pH,pad,5]=B
+        pixel = np.zeros((1, 1, 3), dtype=np.float32)
+        pixel[0,0,:]=RGBs
+        HSV = cv2.cvtColor(pixel, cv2.COLOR_RGB2HSV)[0, 0, :]
+        LAB = cv2.cvtColor(pixel/255, cv2.COLOR_RGB2Lab)[0, 0, :]
+        ColorArray[pH,pad,3]=HSV[0]/360*180
+        ColorArray[pH,pad,4]=HSV[1]*255
+        ColorArray[pH,pad,5]=HSV[2]
+        ColorArray[pH,pad,6]= LAB[0] / 100.0 * 255
+        ColorArray[pH,pad,7]= (LAB[1] + 128) 
+        ColorArray[pH,pad,8]= (LAB[2] + 128) 
+        
+fig,axes=plt.subplots(len(padValues),3,sharey=True)
+for pad in range(len(padValues)):
+    axes[pad,0].plot(pHValues,ColorArray[:,pad,0],"-or")
+    axes[pad,0].plot(pHValues,ColorArray[:,pad,1],"-og")
+    axes[pad,0].plot(pHValues,ColorArray[:,pad,2],"-ob")
+    axes[pad,1].plot(pHValues,ColorArray[:,pad,3],"-oc")
+    axes[pad,1].plot(pHValues,ColorArray[:,pad,4],"-ok")
+    axes[pad,1].plot(pHValues,ColorArray[:,pad,5],"-om")
+    axes[pad,2].plot(pHValues,ColorArray[:,pad,6],"-ok")
+    axes[pad,2].plot(pHValues,ColorArray[:,pad,7],"-om")
+    axes[pad,2].plot(pHValues,ColorArray[:,pad,8],"-oy")
+
 #for 8.5 by 11        
 paperWidth=int(11*300)
 paperHeight=int(8.5*300)
@@ -217,14 +298,18 @@ boxWide=int(12.7/2.54*300)
 boxHigh=int(7/2.54*300)
 cv2.rectangle(ReferenceImage,(borderMargin+circlePad,int(paperHeight/2)), (borderMargin+circlePad+boxWide+boxLine,int(paperHeight/2)+boxHigh+boxLine), (128,128,128), boxLine)
 
-
 circleText=circleText+"; M:("+str(paperWidth-circlePad)+","+str(circlePad)+")("+str(paperWidth-circlePad)+","+str(paperHeight-circlePad)+")"
 cv2.putText(ReferenceImage, circleText, (borderMargin*3,paperHeight-borderMargin-swatchMargin), font, 1,(0,0,0),1,cv2.LINE_AA)
 
 for pH in range(len(pHValues)):
     for pad in range(len(padValues)):
         cv2.circle(ReferenceImage,((stripinc*pH)+stripstart,(padinc*pad)+padstart), circler, (ColorArray[pH,pad,2],ColorArray[pH,pad,1],ColorArray[pH,pad,0]), -1)
-
+        print("xy=",(stripinc*pH)+stripstart,(padinc*pad)+padstart)
+        print("wh=",circler*2,circler*2)
+        print("vl=",pH, pad)
+        print("ll=",np.round(ColorArray[pH,pad,6:9]-20))
+        print("ul=",np.round(ColorArray[pH,pad,6:9]+20))
+        print()
 cv2.imshow('RefCard', ReferenceImage)
 cv2.imwrite(OODirectory+OOFileNameA+"RefCard.jpg", ReferenceImage)
 
