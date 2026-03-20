@@ -622,7 +622,8 @@ def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=
     if roiSetName[0:2]=="WB":
         maskROI = cv2.inRange(hsvROI, np.array(dictSet['WBR'+' ll']), np.array(dictSet['WBR'+' ul']))
     else:        
-        maskROI = cv2.inRange(hsvROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
+        #maskROI = cv2.inRange(hsvROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
+        maskROI = cv2.inRange(labROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
     #following is only necessary if finding largest connected contour
     if connectedOnly:
         contourROI,contourArea,boundingRectangle=FindLargestContour(maskROI)
@@ -1653,7 +1654,7 @@ for startIndex,endIndex in zip([0,60],[60,124]):
     pHs=standardSwatchStats[13,0,0,startIndex:endIndex]
     padList=set(pads)
     fig,axes=plt.subplots(len(padList),1,sharex=True,sharey=True)
-    startCC=7
+    startCC=6
     endCC=9 #note: 1 larger than actual channel#
     unkData=parameterStats[startCC:endCC,0,0,0:4]
     for padNumber in padList:
