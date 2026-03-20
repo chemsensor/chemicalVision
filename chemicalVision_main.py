@@ -1655,7 +1655,7 @@ for startIndex,endIndex in zip([0,60],[60,124]):
     padList=set(pads)
     fig,axes=plt.subplots(len(padList),1,sharex=True,sharey=True)
     startCC=6
-    endCC=9 #note: 1 larger than actual channel#
+    endCC=8 #note: 1 larger than actual channel#
     unkData=parameterStats[startCC:endCC,0,0,0:4]
     for padNumber in padList:
         padMask=padNumber==standardSwatchStats[14,0,0,startIndex:endIndex]
