@@ -582,7 +582,8 @@ def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=
     if roiSetName[0:2]=="WB":
         maskROI = cv2.inRange(hsvROI, np.array(dictSet['WBR'+' ll']), np.array(dictSet['WBR'+' ul']))
     else:        
-        maskROI = cv2.inRange(hsvROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
+        #maskROI = cv2.inRange(hsvROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
+        maskROI = cv2.inRange(labROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
     #following is only necessary if finding largest connected contour
     if connectedOnly:
         contourROI,contourArea,boundingRectangle=FindLargestContour(maskROI)
