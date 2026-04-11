@@ -471,6 +471,26 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
     referenceStats=np.zeros((16,len(refList)))    
     for refRegion,refNumber in zip(refList,range(len(refList))):
         rgbCLR[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]] = rotImage[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]]
+        hsvROI = cv2.cvtColor(rgbCLR, cv2.COLOR_BGR2HSV)
+        hsvROI[:,:,0]=ip.ShiftHOriginToValue(hsvROI[:,:,0],dictSet['hue lo'][0],dictSet['hue lo'][1])
+        labROI = cv2.cvtColor(rgbCLR, cv2.COLOR_BGR2LAB)
+        
+        #maskROI = cv2.inRange(labROI, np.array(dictSet[refRegion+' ll']), np.array(dictSet[refRegion+' ul']))
+        L = labROI[:,:,0]
+        a = labROI[:,:,1].astype(np.int16)
+        b = labROI[:,:,2].astype(np.int16)
+        S = hsvROI[:,:,1]
+        
+        maskROI = (
+            (L >= dictSet[refRegion+' ll'][0]) & (L <= dictSet[refRegion+' ul'][0]) &
+            ((np.abs(a - 128) > dictSet[refRegion+' ll'][1]) |
+             (np.abs(b - 128) > dictSet[refRegion+' ll'][1])) &
+            ((np.abs(a - 128) < dictSet[refRegion+' ul'][1]) &
+             (np.abs(b - 128) < dictSet[refRegion+' ul'][1])) &
+            (S >= dictSet[refRegion+' ll'][2]) & (S <= dictSet[refRegion+' ul'][2])
+        ).astype(np.uint8) * 255
+        
+        rgbCLR = cv2.bitwise_and(rgbCLR,rgbCLR, mask= maskROI)
         cv2.rectangle(frameForDrawing,(dictSet[refRegion+' xy'][0],dictSet[refRegion+' xy'][1]),(dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0],dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1]),(255,0,0),10 )
         if dictSet[refRegion+' hs'][2]!=0:
             valSummary,stdSummary,resMask,resRGB,contourArea,boundingRectangle,histogramImage=SummarizeROI(rotImage,refRegion,dictSet,connectedOnly=False,histogramHeight=dictSet['dsp wh'][1])
@@ -497,18 +517,23 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
         refCLR=np.zeros((referenceFrame.shape),dtype='uint8')
         for refRegion,refNumber in zip(refList,range(len(refList))):
             refCLR[dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]] = referenceFrame [dictSet[refRegion+' xy'][1]:dictSet[refRegion+' xy'][1]+dictSet[refRegion+' wh'][1], dictSet[refRegion+' xy'][0]:dictSet[refRegion+' xy'][0]+dictSet[refRegion+' wh'][0]]
-        tgt_histB, _ = np.histogram(refCLR[:,:,0].ravel(), 256, [0,256])
-        nonBlack=float(refCLR[:,:,0].size)-tgt_histB[0]
+        
+        tgt_histB, _ = np.histogram(rgbCLR[:,:,0].ravel(), 256, [0,256])
+        nonExtreme=float(rgbCLR[:,:,0].size)-tgt_histB[0]-tgt_histB[255]
         tgt_histB[0] = 0
-        templateHistogram[0] = np.cumsum(tgt_histB) / float(nonBlack)
-        tgt_histG, _ = np.histogram(refCLR[:,:,1].ravel(), 256, [0,256])
-        nonBlack=float(refCLR[:,:,1].size)-tgt_histG[0]
+        tgt_histB[255] = 0
+        templateHistogram[0] = np.cumsum(tgt_histB) / float(nonExtreme)
+        tgt_histG, _ = np.histogram(rgbCLR[:,:,1].ravel(), 256, [0,256])
+        nonExtreme=float(rgbCLR[:,:,1].size)-tgt_histG[0]-tgt_histG[255]
         tgt_histG[0] = 0
-        templateHistogram[1] = np.cumsum(tgt_histG) / float(nonBlack)
-        tgt_histR, _ = np.histogram(refCLR[:,:,2].ravel(), 256, [0,256])
-        nonBlack=float(refCLR[:,:,2].size)-tgt_histR[0]
+        tgt_histG[255] = 0
+        templateHistogram[1] = np.cumsum(tgt_histG) / float(nonExtreme)
+        tgt_histR, _ = np.histogram(rgbCLR[:,:,2].ravel(), 256, [0,256])
+        nonExtreme=float(rgbCLR[:,:,2].size)-tgt_histR[0]-tgt_histR[255]
         tgt_histR[0] = 0
-        templateHistogram[2] = np.cumsum(tgt_histR) / float(nonBlack)
+        tgt_histR[255] = 0
+        templateHistogram[2] = np.cumsum(tgt_histR) / float(nonExtreme)
+        
         tableB=HistogramMatchTable(rgbCLR[:,:,0], templateHistogram[0])
         tableG=HistogramMatchTable(rgbCLR[:,:,1], templateHistogram[1])
         tableR=HistogramMatchTable(rgbCLR[:,:,2], templateHistogram[2])
@@ -623,7 +648,23 @@ def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=
         maskROI = cv2.inRange(hsvROI, np.array(dictSet['WBR'+' ll']), np.array(dictSet['WBR'+' ul']))
     else:        
         #maskROI = cv2.inRange(hsvROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
-        maskROI = cv2.inRange(labROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
+        #maskROI = cv2.inRange(labROI, np.array(dictSet[roiSetName+' ll']), np.array(dictSet[roiSetName+' ul']))
+
+        L = labROI[:,:,0]
+        a = labROI[:,:,1].astype(np.int16)
+        b = labROI[:,:,2].astype(np.int16)
+        S = hsvROI[:,:,1]
+        
+        maskROI = (
+            (L >= dictSet[roiSetName+' ll'][0]) & (L <= dictSet[roiSetName+' ul'][0]) &
+            ((np.abs(a - 128) > dictSet[roiSetName+' ll'][1]) |
+             (np.abs(b - 128) > dictSet[roiSetName+' ll'][1])) &
+            ((np.abs(a - 128) < dictSet[roiSetName+' ul'][1]) &
+             (np.abs(b - 128) < dictSet[roiSetName+' ul'][1])) &
+            (S >= dictSet[roiSetName+' ll'][2]) & (S <= dictSet[roiSetName+' ul'][2])
+        ).astype(np.uint8) * 255
+
+
     #following is only necessary if finding largest connected contour
     if connectedOnly:
         contourROI,contourArea,boundingRectangle=FindLargestContour(maskROI)
@@ -1633,19 +1674,22 @@ if dictSet['flg hb'][0]==2:
         root.withdraw()
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('CSV files', '.csv'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
         tgt_histB, _ = np.histogram(rgbCLR[:,:,0].ravel(), 256, [0,256])
-        nonBlack=float(rgbCLR[:,:,0].size)-tgt_histB[0]
+        nonExtreme=float(rgbCLR[:,:,0].size)-tgt_histB[0]-tgt_histB[255]
         tgt_histB[0] = 0
-        tgt_cdfB = np.cumsum(tgt_histB) / float(nonBlack)
+        tgt_histB[255] = 0
+        tgt_cdfB = np.cumsum(tgt_histB) / float(nonExtreme)
         tgt_histG, _ = np.histogram(rgbCLR[:,:,1].ravel(), 256, [0,256])
-        nonBlack=float(rgbCLR[:,:,1].size)-tgt_histG[0]
+        nonExtreme=float(rgbCLR[:,:,1].size)-tgt_histG[0]-tgt_histG[255]
         tgt_histG[0] = 0
-        tgt_cdfG = np.cumsum(tgt_histG) / float(nonBlack)
+        tgt_histG[255] = 0
+        tgt_cdfG = np.cumsum(tgt_histG) / float(nonExtreme)
         tgt_histR, _ = np.histogram(rgbCLR[:,:,2].ravel(), 256, [0,256])
-        nonBlack=float(rgbCLR[:,:,2].size)-tgt_histR[0]
+        nonExtreme=float(rgbCLR[:,:,2].size)-tgt_histR[0]-tgt_histR[255]
         tgt_histR[0] = 0
-        tgt_cdfR = np.cumsum(tgt_histR) / float(nonBlack)
+        tgt_histR[255] = 0
+        tgt_cdfR = np.cumsum(tgt_histR) / float(nonExtreme)
         dfTargetCDFs = pd.DataFrame({'BlueHist':tgt_cdfB, 'GreenHist':tgt_cdfG, 'RedHist':tgt_cdfR})
-        dfTargetCDFs.to_csv(data_file_path, index=False)
+        dfTargetCDFs.to_csv(data_file_path, index=False)  
 
 cv2.imshow('Display', displayFrame)
 

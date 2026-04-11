@@ -1523,17 +1523,20 @@ if dictSet['flg hb'][0]==2:
         root.withdraw()
         data_file_path = asksaveasfilename(initialdir=filePathImageProcessed,filetypes=[('CSV files', '.csv'),('all files', '.*')],initialfile=video_file_filename+'_frameData' ,defaultextension='.xlsx')
         tgt_histB, _ = np.histogram(rgbCLR[:,:,0].ravel(), 256, [0,256])
-        nonBlack=float(rgbCLR[:,:,0].size)-tgt_histB[0]
+        nonExtreme=float(rgbCLR[:,:,0].size)-tgt_histB[0]-tgt_histB[255]
         tgt_histB[0] = 0
-        tgt_cdfB = np.cumsum(tgt_histB) / float(nonBlack)
+        tgt_histB[255] = 0
+        tgt_cdfB = np.cumsum(tgt_histB) / float(nonExtreme)
         tgt_histG, _ = np.histogram(rgbCLR[:,:,1].ravel(), 256, [0,256])
-        nonBlack=float(rgbCLR[:,:,1].size)-tgt_histG[0]
+        nonExtreme=float(rgbCLR[:,:,1].size)-tgt_histG[0]-tgt_histG[255]
         tgt_histG[0] = 0
-        tgt_cdfG = np.cumsum(tgt_histG) / float(nonBlack)
+        tgt_histG[255] = 0
+        tgt_cdfG = np.cumsum(tgt_histG) / float(nonExtreme)
         tgt_histR, _ = np.histogram(rgbCLR[:,:,2].ravel(), 256, [0,256])
-        nonBlack=float(rgbCLR[:,:,2].size)-tgt_histR[0]
+        nonExtreme=float(rgbCLR[:,:,2].size)-tgt_histR[0]-tgt_histR[255]
         tgt_histR[0] = 0
-        tgt_cdfR = np.cumsum(tgt_histR) / float(nonBlack)
+        tgt_histR[255] = 0
+        tgt_cdfR = np.cumsum(tgt_histR) / float(nonExtreme)
         dfTargetCDFs = pd.DataFrame({'BlueHist':tgt_cdfB, 'GreenHist':tgt_cdfG, 'RedHist':tgt_cdfR})
         dfTargetCDFs.to_csv(data_file_path, index=False)  
     
