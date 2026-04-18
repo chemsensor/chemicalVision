@@ -477,16 +477,18 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
         
         #maskROI = cv2.inRange(labROI, np.array(dictSet[refRegion+' ll']), np.array(dictSet[refRegion+' ul']))
         L = labROI[:,:,0]
-        a = labROI[:,:,1].astype(np.int16)
-        b = labROI[:,:,2].astype(np.int16)
+        a = labROI[:,:,1]
+        b = labROI[:,:,2]
+        #a = labROI[:,:,1].astype(np.int16)
+        #b = labROI[:,:,2].astype(np.int16)
         S = hsvROI[:,:,1]
         
         maskROI = (
             (L >= dictSet[refRegion+' ll'][0]) & (L <= dictSet[refRegion+' ul'][0]) &
-            ((np.abs(a - 128) > dictSet[refRegion+' ll'][1]) |
-             (np.abs(b - 128) > dictSet[refRegion+' ll'][1])) &
-            ((np.abs(a - 128) < dictSet[refRegion+' ul'][1]) &
-             (np.abs(b - 128) < dictSet[refRegion+' ul'][1])) &
+            ((np.abs(a - 128) >= dictSet[refRegion+' ll'][1]) |
+             (np.abs(b - 128) >= dictSet[refRegion+' ll'][1])) &
+            ((np.abs(a - 128) <= dictSet[refRegion+' ul'][1]) &
+             (np.abs(b - 128) <= dictSet[refRegion+' ul'][1])) &
             (S >= dictSet[refRegion+' ll'][2]) & (S <= dictSet[refRegion+' ul'][2])
         ).astype(np.uint8) * 255
         
@@ -657,10 +659,10 @@ def SummarizeROI(rotImage,roiSetName,dictSet,connectedOnly=True,histogramHeight=
         
         maskROI = (
             (L >= dictSet[roiSetName+' ll'][0]) & (L <= dictSet[roiSetName+' ul'][0]) &
-            ((np.abs(a - 128) > dictSet[roiSetName+' ll'][1]) |
-             (np.abs(b - 128) > dictSet[roiSetName+' ll'][1])) &
-            ((np.abs(a - 128) < dictSet[roiSetName+' ul'][1]) &
-             (np.abs(b - 128) < dictSet[roiSetName+' ul'][1])) &
+            ((np.abs(a - 128) >= dictSet[roiSetName+' ll'][1]) |
+             (np.abs(b - 128) >= dictSet[roiSetName+' ll'][1])) &
+            ((np.abs(a - 128) <= dictSet[roiSetName+' ul'][1]) &
+             (np.abs(b - 128) <= dictSet[roiSetName+' ul'][1])) &
             (S >= dictSet[roiSetName+' ll'][2]) & (S <= dictSet[roiSetName+' ul'][2])
         ).astype(np.uint8) * 255
 
@@ -1189,14 +1191,45 @@ def OpenCVDecodeSevenSegment(massFrame,decodeFrame,dictSet):
 def HistogramMatchTable(source, template_cdf):
     # Compute the histograms and their normalized CDFs
     src_hist, _ = np.histogram(source.ravel(), 256, [0,256])
-    nonBlack=float(source.size)-src_hist[0]
+    nonExtreme=float(source.size)-src_hist[0]-src_hist[255]
     src_hist[0] = 0
-
+    src_hist[255] = 0
     #tgt_hist, _ = np.histogram(template.ravel(), 256, [0,256])
-    src_cdf = np.cumsum(src_hist) / float(nonBlack)
+    src_cdf = np.cumsum(src_hist) / float(nonExtreme)
     #tgt_cdf = np.cumsum(tgt_hist) / float(template.size)
     # Create a mapping from source values to target values
     table = np.interp(src_cdf, template_cdf, np.arange(256))
+    return table
+
+def HistogramMatchTableRevised(source, template_cdf):
+    # Compute source histogram and CDF, excluding exact 0 and 255
+    src_hist, _ = np.histogram(source.ravel(), 256, [0,256])
+    nonExtreme = float(source.size) - src_hist[0] - src_hist[255]
+    src_hist[0] = 0
+    src_hist[255] = 0
+    src_cdf = np.cumsum(src_hist) / float(nonExtreme)
+
+    # Extract valid (non-flat) region of template CDF for interpolation
+    valid = (template_cdf > 0) & (template_cdf < 1)
+    xp = template_cdf[valid]
+    fp = np.arange(256)[valid].astype(float)
+
+    # Core interpolation over valid range
+    table = np.interp(src_cdf, xp, fp)
+
+    # Linear extrapolation below valid range
+    low_slope = (fp[1] - fp[0]) / (xp[1] - xp[0])
+    below = src_cdf < xp[0]
+    table[below] = fp[0] + low_slope * (src_cdf[below] - xp[0])
+
+    # Linear extrapolation above valid range
+    high_slope = (fp[-1] - fp[-2]) / (xp[-1] - xp[-2])
+    above = src_cdf > xp[-1]
+    table[above] = fp[-1] + high_slope * (src_cdf[above] - xp[-1])
+
+    # Clip to valid uint8 range
+    table = np.clip(table, 0, 255).astype(np.uint8)
+
     return table
 
 if len(video_file_path)!=0:
