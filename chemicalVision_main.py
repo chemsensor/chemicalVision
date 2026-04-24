@@ -510,9 +510,9 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
             referenceStats[14,refNumber]=boundingRectangle[1][1]
             referenceStats[15,refNumber]=contourArea
     if (dictSet['flg hb'][0]==1):
-        tableB=HistogramMatchTable(rgbCLR[:,:,0], templateHistogram[0])
-        tableG=HistogramMatchTable(rgbCLR[:,:,1], templateHistogram[1])
-        tableR=HistogramMatchTable(rgbCLR[:,:,2], templateHistogram[2])
+        tableB=HistogramMatchTableRevised(rgbCLR[:,:,0], templateHistogram[0])
+        tableG=HistogramMatchTableRevised(rgbCLR[:,:,1], templateHistogram[1])
+        tableR=HistogramMatchTableRevised(rgbCLR[:,:,2], templateHistogram[2])
         rotImage=ip.OpenCVHistogramBalanceImage(rotImage,tableR,tableG,tableB)
         frame=ip.OpenCVHistogramBalanceImage(frame,tableR,tableG,tableB)
     elif (dictSet['flg hb'][0]==3):
@@ -536,9 +536,9 @@ def ColorBalanceFrame(displayFrame,rotImage,frame,frameForDrawing,dictSet,refLis
         tgt_histR[255] = 0
         templateHistogram[2] = np.cumsum(tgt_histR) / float(nonExtreme)
         
-        tableB=HistogramMatchTable(rgbCLR[:,:,0], templateHistogram[0])
-        tableG=HistogramMatchTable(rgbCLR[:,:,1], templateHistogram[1])
-        tableR=HistogramMatchTable(rgbCLR[:,:,2], templateHistogram[2])
+        tableB=HistogramMatchTableRevised(rgbCLR[:,:,0], templateHistogram[0])
+        tableG=HistogramMatchTableRevised(rgbCLR[:,:,1], templateHistogram[1])
+        tableR=HistogramMatchTableRevised(rgbCLR[:,:,2], templateHistogram[2])
         rotImage=ip.OpenCVHistogramBalanceImage(rotImage,tableR,tableG,tableB)
         frame=ip.OpenCVHistogramBalanceImage(frame,tableR,tableG,tableB)
     else:
