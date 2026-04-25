@@ -749,12 +749,6 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
         skipFrame=False
     rotForDrawing=np.copy(rotImage)
     if skipFrame==False:
-        if dictSet['flg wb'][1]==1:
-            referenceColorStats,rgbCLR,tableB,tableG,tableR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
-            if dictSet['flg di'][0]==1:
-                cv2.imshow("CLR",rgbCLR)
-        else:
-            rgbCLR=[[0]]
         if dictSet['flg wb'][0]==1:
             rgbWBR,rotImage,frame,rotForDrawing=WhiteBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,wbList=wbList)
             if dictSet['flg di'][0]==1:
@@ -765,6 +759,12 @@ def ProcessOneFrame(frame,dictSet,displayFrame,wbList=["WB1"],roiList=["RO1"],re
             #maskWBR = cv2.inRange(hsvWBR, np.array(dictSet['WBR ll']), np.array(dictSet['WBR ul']))
             #rgbWBRsummary=cv2.meanStdDev(rgbWBR,mask=maskWBR)
             #resFrameWBR = cv2.bitwise_and(rgbWBR,rgbWBR, mask= maskWBR)
+        if dictSet['flg wb'][1]==1:
+            referenceColorStats,rgbCLR,tableB,tableG,tableR,rotImage,frame,rotForDrawing=ColorBalanceFrame(displayFrame,rotImage,frame,rotForDrawing,dictSet,refList=refList)
+            if dictSet['flg di'][0]==1:
+                cv2.imshow("CLR",rgbCLR)
+        else:
+            rgbCLR=[[0]]
         if dictSet['flg di'][0]==1:
             cv2.imshow("RotatedImage",rotImage)
         for roiSetName,roiNumber in zip(roiList,range(len(roiList))):
@@ -1202,13 +1202,19 @@ def HistogramMatchTable(source, template_cdf):
     return table
 
 def HistogramMatchTableRevised(source, template_cdf):
+    fig,ax=plt.subplots()
+    ax2 = ax.twinx()
+    xAxis=np.arange(0,256,1)
+
     # Compute source histogram and CDF, excluding exact 0 and 255
     src_hist, _ = np.histogram(source.ravel(), 256, [0,256])
     nonExtreme = float(source.size) - src_hist[0] - src_hist[255]
     src_hist[0] = 0
     src_hist[255] = 0
     src_cdf = np.cumsum(src_hist) / float(nonExtreme)
-
+    
+    ax.plot(xAxis,src_cdf,'r')
+    
     # Extract valid (non-flat) region of template CDF for interpolation
     valid = (template_cdf > 0) & (template_cdf < 1)
     xp = template_cdf[valid]
@@ -1216,6 +1222,9 @@ def HistogramMatchTableRevised(source, template_cdf):
 
     # Core interpolation over valid range
     table = np.interp(src_cdf, xp, fp)
+
+    ax2.plot(xAxis,table,color='grey')
+    ax.plot(fp,xp,'g')
 
     # Linear extrapolation below valid range
     low_slope = (fp[1] - fp[0]) / (xp[1] - xp[0])
@@ -1229,6 +1238,8 @@ def HistogramMatchTableRevised(source, template_cdf):
 
     # Clip to valid uint8 range
     table = np.clip(table, 0, 255).astype(np.uint8)
+
+    ax2.plot(xAxis,table,color='black')
 
     return table
 
@@ -1732,7 +1743,7 @@ for startIndex,endIndex in zip([0,60],[60,124]):
     padList=set(pads)
     fig,axes=plt.subplots(len(padList),1,sharex=True,sharey=True)
     startCC=6
-    endCC=8 #note: 1 larger than actual channel#
+    endCC=9 #note: 1 larger than actual channel#
     unkData=parameterStats[startCC:endCC,0,0,0:4]
     for padNumber in padList:
         padMask=padNumber==standardSwatchStats[14,0,0,startIndex:endIndex]
